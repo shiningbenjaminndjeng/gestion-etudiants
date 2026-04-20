@@ -1,1 +1,675 @@
 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GestuEtud — Gestion des Étudiants</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0f0f13;
+  --bg2: #16161d;
+  --bg3: #1e1e28;
+  --card: #1a1a24;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0eff6;
+  --text2: #9896b0;
+  --text3: #5e5c76;
+  --blue: #6c8fff;
+  --blue2: #3d5bdb;
+  --pink: #e86fa4;
+  --pink2: #c0417a;
+  --green: #4ecb8d;
+  --amber: #f5a623;
+  --red: #e85454;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+
+/* ── Layout ── */
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh}
+.main{flex:1;overflow:auto}
+
+/* ── Sidebar ── */
+.logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.logo-title{font-size:17px;font-weight:600;letter-spacing:-.3px}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+.nav{padding:12px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:var(--text2);transition:all .15s;font-size:13.5px;border-left:2px solid transparent}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:var(--blue);background:rgba(108,143,255,0.08);border-left-color:var(--blue)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text3)}
+.api-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:5px;vertical-align:middle}
+
+/* ── Pages ── */
+.page{display:none;padding:28px 32px;max-width:1100px}
+.page.active{display:block}
+.page-title{font-size:22px;font-weight:600;letter-spacing:-.4px;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+
+/* ── Stats grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
+.stat-label{font-size:11.5px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.stat-val{font-size:28px;font-weight:600;letter-spacing:-.5px}
+.stat-val.blue{color:var(--blue)}
+.stat-val.pink{color:var(--pink)}
+.stat-val.green{color:var(--green)}
+.stat-val.amber{color:var(--amber)}
+
+/* ── Grid 2 cols ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ── Forms ── */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.form-input, .form-select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border .15s}
+.form-input:focus, .form-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(108,143,255,.12)}
+.form-select option{background:var(--bg3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:all .15s}
+.btn-primary{background:var(--blue2);color:#fff}
+.btn-primary:hover{background:#4a6de8}
+.btn-danger{background:rgba(232,84,84,.15);color:var(--red);border:1px solid rgba(232,84,84,.2)}
+.btn-danger:hover{background:rgba(232,84,84,.25)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-full{width:100%;justify-content:center}
+
+/* ── Table ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:500}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13.5px;color:var(--text2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02);color:var(--text)}
+.td-name{font-weight:500;color:var(--text)}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:500}
+.badge-m{background:rgba(108,143,255,.15);color:var(--blue)}
+.badge-f{background:rgba(232,111,164,.15);color:var(--pink)}
+.badge-count{background:rgba(255,255,255,.07);color:var(--text2)}
+
+/* ── Toast ── */
+.toast-wrap{position:fixed;top:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;min-width:240px;animation:slideIn .2s ease;display:flex;align-items:center;gap:8px}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.toast.success .toast-dot{background:var(--green)}
+.toast.error .toast-dot{background:var(--red)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Bar chart ── */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.bar-name{font-size:12.5px;width:160px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.bar-track{flex:1;height:20px;background:var(--bg3);border-radius:4px;overflow:hidden;display:flex}
+.bar-m{background:var(--blue);height:100%;transition:width .4s ease}
+.bar-f{background:var(--pink);height:100%;transition:width .4s ease}
+.bar-nums{font-size:11.5px;color:var(--text3);min-width:60px;text-align:right;font-family:'DM Mono',monospace}
+
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:20px;letter-spacing:-.2px}
+.modal-close{cursor:pointer;color:var(--text3);font-size:18px;float:right;line-height:1}
+.modal-close:hover{color:var(--text)}
+
+/* ── Search bar ── */
+.search-bar{display:flex;gap:10px;margin-bottom:18px}
+.search-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none}
+.search-input:focus{border-color:var(--blue)}
+.sort-select{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.5}
+.empty-text{font-size:13.5px}
+
+/* ── Loading ── */
+.loading{text-align:center;padding:30px;color:var(--text3);font-size:13px}
+
+/* ── Unite detail panel ── */
+.unite-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);margin-bottom:12px;overflow:hidden}
+.unite-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;transition:background .15s}
+.unite-card-header:hover{background:rgba(255,255,255,.03)}
+.unite-card-name{font-weight:500;font-size:14px}
+.unite-card-prof{font-size:12px;color:var(--text3);margin-top:1px}
+.unite-card-meta{display:flex;gap:8px;align-items:center}
+.unite-card-body{display:none;padding:0 18px 16px;border-top:1px solid var(--border)}
+.unite-card-body.open{display:block}
+.chevron{transition:transform .2s;font-size:12px;color:var(--text3)}
+.chevron.open{transform:rotate(90deg)}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  .sidebar{display:none}
+  .page{padding:16px}
+  .form-row{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title">GestuEtud</div>
+    <div class="logo-sub">v1.0 · API Django REST</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('unites')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13V5l6-3 6 3v8"/><rect x="5" y="8" width="3" height="5"/><rect x="8" y="8" width="3" height="5"/></svg>
+      Unités d'ens.
+    </div>
+    <div class="nav-item" onclick="showPage('etudiants')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Étudiants
+    </div>
+    <div class="nav-item" onclick="showPage('statistiques')">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V8l3-3 3 3 3-5 3 2v9"/></svg>
+      Statistiques
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="api-dot"></span>
+    <span id="api-status">Connexion API…</span>
+  </div>
+</aside>
+
+<!-- ── Pages ── -->
+<main class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-title">Dashboard</div>
+  <div class="page-sub">Vue d'ensemble de ta base de données étudiants</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total étudiants</div><div class="stat-val blue" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Garçons</div><div class="stat-val blue" id="stat-m">—</div></div>
+    <div class="stat-card"><div class="stat-label">Filles</div><div class="stat-val pink" id="stat-f">—</div></div>
+    <div class="stat-card"><div class="stat-label">Unités</div><div class="stat-val green" id="stat-unites">—</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Derniers étudiants inscrits</div></div>
+      <div id="dash-recent"><div class="loading">Chargement…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Répartition par unité</div></div>
+      <div id="dash-unites"><div class="loading">Chargement…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- UNITÉS -->
+<div class="page" id="page-unites">
+  <div class="page-title">Unités d'enseignement</div>
+  <div class="page-sub">Gère les unités et consulte les étudiants inscrits à chacune</div>
+  <div class="grid2" style="margin-bottom:20px;align-items:start">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Ajouter une unité</div></div>
+      <div class="form-group"><label class="form-label">Nom de l'unité *</label><input class="form-input" id="u-nom" placeholder="Ex: Mathématiques Appliquées"></div>
+      <div class="form-group"><label class="form-label">Nom du professeur *</label><input class="form-input" id="u-prof" placeholder="Ex: Dr. Mbarga"></div>
+      <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="u-desc" placeholder="Optionnel"></div>
+      <button class="btn btn-primary btn-full" onclick="addUnite()">Ajouter l'unité</button>
+    </div>
+    <div>
+      <div id="unites-list"><div class="loading">Chargement des unités…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ÉTUDIANTS -->
+<div class="page" id="page-etudiants">
+  <div class="page-title">Étudiants</div>
+  <div class="page-sub">Enregistre et consulte les informations des étudiants</div>
+  <div class="grid2" style="margin-bottom:20px;align-items:start">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Ajouter un étudiant</div></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nom *</label><input class="form-input" id="e-nom" placeholder="Nguema"></div>
+        <div class="form-group"><label class="form-label">Prénom *</label><input class="form-input" id="e-prenom" placeholder="Paul"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date de naissance *</label><input class="form-input" id="e-ddn" type="date"></div>
+        <div class="form-group"><label class="form-label">Lieu de naissance *</label><input class="form-input" id="e-lieu" placeholder="Yaoundé"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Âge *</label><input class="form-input" id="e-age" type="number" placeholder="23" min="1"></div>
+        <div class="form-group"><label class="form-label">Genre *</label>
+          <select class="form-select" id="e-genre">
+            <option value="M">Masculin</option>
+            <option value="F">Féminin</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Ethnie</label><input class="form-input" id="e-ethnie" placeholder="Optionnel"></div>
+      <div class="form-group"><label class="form-label">Unité d'enseignement *</label>
+        <select class="form-select" id="e-unite"><option value="">— Sélectionne une unité —</option></select>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="addEtudiant()">Enregistrer l'étudiant</button>
+    </div>
+    <div>
+      <div class="search-bar">
+        <input class="search-input" id="search-input" placeholder="Rechercher par nom, prénom, ethnie…" oninput="searchEtudiants()">
+        <select class="sort-select" id="sort-select" onchange="loadEtudiants()">
+          <option value="nom">Trier : Nom A→Z</option>
+          <option value="-nom">Trier : Nom Z→A</option>
+          <option value="genre">Genre F→M</option>
+          <option value="-genre">Genre M→F</option>
+          <option value="age">Âge ↑</option>
+          <option value="-age">Âge ↓</option>
+          <option value="-date_inscription">Plus récents</option>
+        </select>
+      </div>
+      <div class="card">
+        <div id="etudiants-list"><div class="loading">Chargement…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATISTIQUES -->
+<div class="page" id="page-statistiques">
+  <div class="page-title">Statistiques</div>
+  <div class="page-sub">Répartition des étudiants par genre et par unité d'enseignement</div>
+  <div style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title">Garçons vs Filles par unité</div>
+        <div style="display:flex;gap:12px;font-size:12px">
+          <span style="color:var(--blue)">■ Masculin</span>
+          <span style="color:var(--pink)">■ Féminin</span>
+        </div>
+      </div>
+      <div id="stats-bars"><div class="loading">Chargement…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Graphe Chart.js</div></div>
+      <canvas id="genre-chart" height="260"></canvas>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- ── Toasts ── -->
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- ── Modal fiche étudiant ── -->
+<div class="modal-overlay" id="modal-fiche">
+  <div class="modal">
+    <div class="modal-title">Fiche étudiant <span class="modal-close" onclick="closeModal('modal-fiche')">✕</span></div>
+    <div id="modal-fiche-content"></div>
+    <div style="margin-top:18px;display:flex;gap:8px">
+      <button class="btn btn-danger btn-sm" id="modal-delete-btn">Supprimer</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-fiche')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+// Mets ici l'URL de ton backend Render (sans slash final)
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://127.0.0.1:8000'
+  : 'https://gestion-etudiants-ryp0.onrender.com'; // ← CHANGE selon ton URL Render
+
+// ── UTILS ───────────────────────────────────────────────────
+async function api(path, opts={}) {
+  const headers = {'Content-Type':'application/json', ...opts.headers};
+  const res = await fetch(API + path, {...opts, headers});
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || res.statusText);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+function toast(msg, type='success') {
+  const wrap = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item')[['dashboard','unites','etudiants','statistiques'].indexOf(name)].classList.add('active');
+  if (name==='dashboard') loadDashboard();
+  if (name==='unites') loadUnites();
+  if (name==='etudiants') { loadEtudiants(); loadUnitesDropdown(); }
+  if (name==='statistiques') loadStats();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── API STATUS ──────────────────────────────────────────────
+async function checkApi() {
+  try {
+    await api('/api/unites/?page_size=1');
+    document.getElementById('api-status').textContent = 'API connectée';
+  } catch {
+    document.getElementById('api-status').textContent = 'API hors ligne';
+    document.querySelector('.api-dot').style.background = 'var(--red)';
+  }
+}
+
+// ── DASHBOARD ───────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [etData, unData] = await Promise.all([
+      api('/api/etudiants/'),
+      api('/api/unites/')
+    ]);
+    const etudiants = etData.results || [];
+    const unites = unData.results || [];
+    let m=0, f=0;
+    etudiants.forEach(e => { if(e.genre==='M') m++; else f++; });
+    document.getElementById('stat-total').textContent = etData.count || 0;
+    document.getElementById('stat-m').textContent = m;
+    document.getElementById('stat-f').textContent = f;
+    document.getElementById('stat-unites').textContent = unData.count || 0;
+
+    // Derniers inscrits
+    const recent = etudiants.slice(0,5);
+    document.getElementById('dash-recent').innerHTML = recent.length ? `
+      <table><thead><tr><th>Nom</th><th>Genre</th><th>Unité</th></tr></thead><tbody>
+      ${recent.map(e=>`<tr>
+        <td class="td-name">${e.prenom} ${e.nom}</td>
+        <td><span class="badge badge-${e.genre.toLowerCase()}">${e.genre==='M'?'Garçon':'Fille'}</span></td>
+        <td>${e.unite_detail?.nom_unite || '—'}</td>
+      </tr>`).join('')}
+      </tbody></table>` : '<div class="empty"><div class="empty-text">Aucun étudiant enregistré</div></div>';
+
+    // Répartition unités
+    document.getElementById('dash-unites').innerHTML = unites.length ? unites.slice(0,5).map(u=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:13.5px;font-weight:500">${u.nom_unite}</div>
+          <div style="font-size:11.5px;color:var(--text3)">${u.nom_prof}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <span class="badge badge-count">${u.nb_etudiants} ét.</span>
+          <span class="badge badge-m">${u.nb_masculins}G</span>
+          <span class="badge badge-f">${u.nb_feminins}F</span>
+        </div>
+      </div>`).join('') : '<div class="empty"><div class="empty-text">Aucune unité créée</div></div>';
+  } catch(e) { toast('Erreur chargement dashboard : ' + e.message, 'error'); }
+}
+
+// ── UNITÉS ──────────────────────────────────────────────────
+async function loadUnites() {
+  try {
+    const data = await api('/api/unites/');
+    const unites = data.results || [];
+    const wrap = document.getElementById('unites-list');
+    if (!unites.length) { wrap.innerHTML = '<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">Aucune unité créée</div></div>'; return; }
+    wrap.innerHTML = unites.map(u=>`
+      <div class="unite-card">
+        <div class="unite-card-header" onclick="toggleUnite(${u.id})">
+          <div>
+            <div class="unite-card-name">${u.nom_unite}</div>
+            <div class="unite-card-prof">${u.nom_prof}</div>
+          </div>
+          <div class="unite-card-meta">
+            <span class="badge badge-count">${u.nb_etudiants}</span>
+            <span class="badge badge-m">${u.nb_masculins}G</span>
+            <span class="badge badge-f">${u.nb_feminins}F</span>
+            <span class="chevron" id="chev-${u.id}">▶</span>
+          </div>
+        </div>
+        <div class="unite-card-body" id="ubody-${u.id}">
+          <div style="padding-top:14px" id="ulist-${u.id}"><div class="loading">Chargement…</div></div>
+          <button class="btn btn-danger btn-sm" style="margin-top:10px" onclick="deleteUnite(${u.id})">Supprimer l'unité</button>
+        </div>
+      </div>`).join('');
+  } catch(e) { toast('Erreur : ' + e.message, 'error'); }
+}
+
+async function toggleUnite(id) {
+  const body = document.getElementById('ubody-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
+  if (!isOpen) await loadUnitStudents(id);
+}
+
+async function loadUnitStudents(id) {
+  const wrap = document.getElementById('ulist-'+id);
+  try {
+    const data = await api(`/api/unites/${id}/etudiants/`);
+    const ets = data.etudiants || [];
+    wrap.innerHTML = ets.length ? `
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <span class="badge badge-count">Total : ${data.total}</span>
+        <span class="badge badge-m">${data.masculins} Garçons</span>
+        <span class="badge badge-f">${data.feminins} Filles</span>
+      </div>
+      <table><thead><tr><th>Nom complet</th><th>Âge</th><th>Genre</th><th>Ethnie</th></tr></thead><tbody>
+      ${ets.map(e=>`<tr>
+        <td class="td-name" style="cursor:pointer" onclick="showFiche(${e.id})">${e.prenom} ${e.nom}</td>
+        <td>${e.age} ans</td>
+        <td><span class="badge badge-${e.genre.toLowerCase()}">${e.genre==='M'?'Masculin':'Féminin'}</span></td>
+        <td>${e.ethnie || '—'}</td>
+      </tr>`).join('')}
+      </tbody></table>` : '<div style="font-size:13px;color:var(--text3);padding:8px 0">Aucun étudiant dans cette unité.</div>';
+  } catch(e) { wrap.innerHTML = '<div style="color:var(--red);font-size:12.5px">Erreur de chargement</div>'; }
+}
+
+async function addUnite() {
+  const nom = document.getElementById('u-nom').value.trim();
+  const prof = document.getElementById('u-prof').value.trim();
+  const desc = document.getElementById('u-desc').value.trim();
+  if (!nom || !prof) { toast('Nom et professeur requis', 'error'); return; }
+  try {
+    await api('/api/unites/', {method:'POST', body:JSON.stringify({nom_unite:nom, nom_prof:prof, description:desc||null})});
+    toast('Unité créée avec succès');
+    document.getElementById('u-nom').value='';
+    document.getElementById('u-prof').value='';
+    document.getElementById('u-desc').value='';
+    loadUnites();
+  } catch(e) { toast('Erreur : ' + e.message, 'error'); }
+}
+
+async function deleteUnite(id) {
+  if (!confirm('Supprimer cette unité ? Les étudiants rattachés seront dissociés.')) return;
+  try {
+    await api(`/api/unites/${id}/`, {method:'DELETE'});
+    toast('Unité supprimée');
+    loadUnites();
+  } catch(e) { toast('Erreur : ' + e.message, 'error'); }
+}
+
+// ── ÉTUDIANTS ───────────────────────────────────────────────
+let searchTimer;
+function searchEtudiants() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadEtudiants, 350);
+}
+
+async function loadEtudiants() {
+  const search = document.getElementById('search-input')?.value || '';
+  const ordering = document.getElementById('sort-select')?.value || 'nom';
+  let url = `/api/etudiants/?ordering=${ordering}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  try {
+    const data = await api(url);
+    const ets = data.results || [];
+    const wrap = document.getElementById('etudiants-list');
+    wrap.innerHTML = ets.length ? `
+      <table><thead><tr><th>Nom complet</th><th>Age</th><th>Genre</th><th>Unité</th><th>Action</th></tr></thead><tbody>
+      ${ets.map(e=>`<tr>
+        <td class="td-name">${e.prenom} ${e.nom}</td>
+        <td>${e.age} ans</td>
+        <td><span class="badge badge-${e.genre.toLowerCase()}">${e.genre==='M'?'Masculin':'Féminin'}</span></td>
+        <td style="font-size:12.5px;color:var(--text2)">${e.unite_detail?.nom_unite || '—'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="showFiche(${e.id})">Fiche</button></td>
+      </tr>`).join('')}
+      </tbody></table>
+      <div style="font-size:12px;color:var(--text3);padding:10px 14px">${data.count} étudiant(s)</div>` :
+      '<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">Aucun étudiant trouvé</div></div>';
+  } catch(e) { toast('Erreur chargement : ' + e.message, 'error'); }
+}
+
+async function loadUnitesDropdown() {
+  try {
+    const data = await api('/api/unites/');
+    const sel = document.getElementById('e-unite');
+    sel.innerHTML = '<option value="">— Sélectionne une unité —</option>' +
+      (data.results||[]).map(u=>`<option value="${u.id}">${u.nom_unite} — ${u.nom_prof}</option>`).join('');
+  } catch(e) {}
+}
+
+async function addEtudiant() {
+  const nom = document.getElementById('e-nom').value.trim();
+  const prenom = document.getElementById('e-prenom').value.trim();
+  const ddn = document.getElementById('e-ddn').value;
+  const lieu = document.getElementById('e-lieu').value.trim();
+  const age = parseInt(document.getElementById('e-age').value);
+  const genre = document.getElementById('e-genre').value;
+  const ethnie = document.getElementById('e-ethnie').value.trim();
+  const unite = document.getElementById('e-unite').value;
+  if (!nom||!prenom||!ddn||!lieu||!age||!unite) { toast('Tous les champs marqués * sont requis', 'error'); return; }
+  try {
+    await api('/api/etudiants/', {method:'POST', body:JSON.stringify({
+      nom, prenom, date_naissance:ddn, lieu_naissance:lieu,
+      age, ethnie:ethnie||'', genre, unite:parseInt(unite)
+    })});
+    toast(`${prenom} ${nom} enregistré(e) avec succès`);
+    ['e-nom','e-prenom','e-ddn','e-lieu','e-age','e-ethnie'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('e-unite').value='';
+    loadEtudiants();
+  } catch(e) { toast('Erreur : ' + e.message, 'error'); }
+}
+
+async function showFiche(id) {
+  try {
+    const fiche = await api(`/api/etudiants/${id}/fiche/`);
+    const et = await api(`/api/etudiants/${id}/`);
+    document.getElementById('modal-fiche-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${[
+          ['Nom complet', fiche.nom_complet],
+          ['Age', fiche.age + ' ans'],
+          ['Naissance', fiche.naissance],
+          ['Genre', fiche.genre],
+          ['Ethnie', fiche.ethnie || '—'],
+          ['Unité', fiche.unite || '—'],
+          ['Professeur', fiche.professeur || '—'],
+          ['Inscrit le', new Date(et.date_inscription).toLocaleDateString('fr-FR')]
+        ].map(([k,v])=>`<div><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">${k}</div><div style="font-size:13.5px;font-weight:500">${v}</div></div>`).join('')}
+      </div>`;
+    document.getElementById('modal-delete-btn').onclick = async () => {
+      if (!confirm('Supprimer cet étudiant ?')) return;
+      await api(`/api/etudiants/${id}/`, {method:'DELETE'});
+      toast('Étudiant supprimé');
+      closeModal('modal-fiche');
+      loadEtudiants();
+    };
+    document.getElementById('modal-fiche').classList.add('open');
+  } catch(e) { toast('Erreur fiche : ' + e.message, 'error'); }
+}
+
+// ── STATISTIQUES ────────────────────────────────────────────
+let chartInstance = null;
+async function loadStats() {
+  try {
+    const data = await api('/api/unites/statistiques-genre/');
+    // Barres HTML
+    const wrap = document.getElementById('stats-bars');
+    wrap.innerHTML = data.length ? data.map(u => {
+      const total = u.total || 1;
+      const pm = Math.round((u.masculins/total)*100);
+      const pf = 100 - pm;
+      return `<div class="bar-row">
+        <div class="bar-name" title="${u.nom_unite}">${u.nom_unite}</div>
+        <div class="bar-track">
+          <div class="bar-m" style="width:${pm}%"></div>
+          <div class="bar-f" style="width:${pf}%"></div>
+        </div>
+        <div class="bar-nums">${u.masculins}G / ${u.feminins}F</div>
+      </div>`;
+    }).join('') : '<div class="empty"><div class="empty-text">Aucune donnée disponible</div></div>';
+
+    // Chart.js
+    const ctx = document.getElementById('genre-chart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(u => u.nom_unite.length > 18 ? u.nom_unite.substring(0,18)+'…' : u.nom_unite),
+        datasets: [
+          {
+            label: 'Masculin',
+            data: data.map(u => u.masculins),
+            backgroundColor: 'rgba(108,143,255,0.75)',
+            borderColor: '#6c8fff',
+            borderWidth: 1,
+            borderRadius: 4,
+          },
+          {
+            label: 'Féminin',
+            data: data.map(u => u.feminins),
+            backgroundColor: 'rgba(232,111,164,0.75)',
+            borderColor: '#e86fa4',
+            borderWidth: 1,
+            borderRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#9896b0', font: { family: 'DM Sans', size: 12 } } },
+          tooltip: { bodyFont: { family: 'DM Sans' }, titleFont: { family: 'DM Sans' } }
+        },
+        scales: {
+          x: { ticks: { color: '#9896b0', font: { family: 'DM Sans', size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#9896b0', font: { family: 'DM Sans', size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+        }
+      }
+    });
+  } catch(e) { toast('Erreur stats : ' + e.message, 'error'); }
+}
+
+// ── INIT ────────────────────────────────────────────────────
+checkApi();
+loadDashboard();
+</script>
+</body>
+</html>
