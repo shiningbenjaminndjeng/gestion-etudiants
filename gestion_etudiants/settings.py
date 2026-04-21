@@ -15,15 +15,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
+    'corsheaders',           # ← CORS
     'rest_framework',
-    'etudiants',         # notre app
-    
+    'etudiants',
 ]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # fichiers statiques
-    'corsheaders.middleware.CorsMiddleware',  
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',   # ← doit être AVANT CommonMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,18 +58,27 @@ DATABASES = {
         'PORT'    : config('DB_PORT', default='5432'),
     }
 }
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "https://gestion-etudiants-1-8xg7.onrender.com",  # ← URL de ton frontend Render
-]
 
-# ── Fichiers statiques (admin Django) ───────────────
+# ── CORS ─────────────────────────────────────────────
+# Autoriser le frontend Render + localhost pour le dev
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:5500,http://127.0.0.1:5500'
+).split(',')
+
+# En alternative, pour tout autoriser (moins sécurisé, utile en dev) :
+# CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+CORS_ALLOW_HEADERS = ['content-type', 'accept', 'authorization', 'x-csrftoken']
+
+# ── Fichiers statiques ───────────────────────────────
 STATIC_URL  = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 # ── Django REST Framework ────────────────────────────
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
