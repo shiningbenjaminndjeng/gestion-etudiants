@@ -4,10 +4,10 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-prod')
 DEBUG      = config('DEBUG', default=False, cast=bool)
 
-# ✅ Accepte toutes les requêtes — hardcodé, plus de variable d'env
+# ✅ Hardcodé — accepte TOUT
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -60,7 +60,7 @@ DATABASES = {
     }
 }
 
-# ✅ CORS — autorise TOUT sans restriction
+# ✅ CORS — autorise TOUT
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
@@ -76,7 +76,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ✅ page_size_query_param activé — permet ?page_size=200 depuis le frontend
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'page_size_query_param': 'page_size',
+    'max_page_size': 500,
 }
