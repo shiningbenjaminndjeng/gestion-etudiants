@@ -4,9 +4,9 @@ from .models import Etudiant, UniteEnseignement
 
 
 class UniteEnseignementSerializer(serializers.ModelSerializer):
-    nb_etudiants = serializers.SerializerMethodField()
-    nb_masculins = serializers.SerializerMethodField()
-    nb_feminins  = serializers.SerializerMethodField()
+    nb_etudiants  = serializers.SerializerMethodField()
+    nb_masculins  = serializers.SerializerMethodField()
+    nb_feminins   = serializers.SerializerMethodField()
 
     class Meta:
         model  = UniteEnseignement
@@ -26,23 +26,16 @@ class UniteEnseignementSerializer(serializers.ModelSerializer):
 
 
 class EtudiantSerializer(serializers.ModelSerializer):
-    # Lecture : liste des unités complètes
-    unites_detail = UniteEnseignementSerializer(source='unites', many=True, read_only=True)
-    # Écriture : liste d'IDs
-    unites        = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=UniteEnseignement.objects.all(),
-        required=False
-    )
+    unite_detail  = UniteEnseignementSerializer(source='unite', read_only=True)
     genre_display = serializers.CharField(source='get_genre_display', read_only=True)
 
     class Meta:
         model  = Etudiant
         fields = [
-            'id', 'matricule', 'nom', 'prenom',
+            'id', 'nom', 'prenom',
             'date_naissance', 'lieu_naissance', 'age',
             'ethnie', 'genre', 'genre_display',
-            'unites', 'unites_detail',
+            'unite', 'unite_detail',
             'date_inscription',
         ]
-        read_only_fields = ['date_inscription', 'unites_detail', 'genre_display']
+        read_only_fields = ['date_inscription', 'unite_detail', 'genre_display']
