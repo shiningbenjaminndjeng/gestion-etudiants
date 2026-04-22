@@ -1,607 +1,321 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GestEtu — Gestion des Étudiants</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GestÉtu — Gestion des Étudiants</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
 <style>
-/* ─── RESET & VARS ───────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1b2d;--navy2:#162236;--navy3:#1e3352;
+  --gold:#c9a84c;--gold2:#e8c76a;--white:#f5f3ee;
+  --muted:#8a9ab5;--danger:#e05252;--success:#3dba7a;
+  --radius:12px;--font:'Outfit',sans-serif;
+  --sidebar:240px;
+}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--navy);color:var(--white);display:flex;min-height:100vh}
 
-:root {
-  --navy:   #0f1b2d;
-  --navy2:  #162236;
-  --navy3:  #1e3352;
-  --gold:   #c9a84c;
-  --gold2:  #e8c76a;
-  --white:  #f5f3ee;
-  --muted:  #8a9ab5;
-  --danger: #e05252;
-  --success:#3dba7a;
-  --radius: 12px;
-  --font:   'Outfit', sans-serif;
+/* ── SIDEBAR ── */
+#sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);
+  background:var(--navy2);border-right:1px solid rgba(201,168,76,.15);
+  display:flex;flex-direction:column;height:100vh;
+  position:fixed;top:0;left:0;z-index:50;
+  transition:transform .25s ease;
 }
+#sidebar.hidden{transform:translateX(-100%)}
+.logo{padding:24px 20px 18px;border-bottom:1px solid rgba(201,168,76,.15)}
+.logo-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold2)}
+.logo-sub{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:1.5px}
+nav{padding:12px 10px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.8px;color:var(--muted);padding:0 10px;margin:16px 0 5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--white)}
+.nav-item.active{background:rgba(201,168,76,.12);color:var(--gold2);font-weight:500}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:14px 20px;border-top:1px solid rgba(201,168,76,.1);font-size:11px;color:var(--muted)}
+#api-status{display:flex;align-items:center;gap:6px;margin-top:4px}
+.dot{width:7px;height:7px;border-radius:50%;background:#555;transition:background .3s;flex-shrink:0}
+.dot.ok{background:var(--success)}.dot.err{background:var(--danger)}
 
-body {
-  font-family: var(--font);
-  background: var(--navy);
-  color: var(--white);
-  min-height: 100vh;
-  display: flex;
-  overflow: hidden;
+/* ── TOPBAR (mobile) ── */
+#topbar{
+  display:none;position:fixed;top:0;left:0;right:0;z-index:40;
+  background:var(--navy2);border-bottom:1px solid rgba(201,168,76,.15);
+  height:54px;align-items:center;padding:0 16px;gap:12px;
 }
+#topbar .logo-title{font-size:18px}
+#menu-btn{background:none;border:none;color:var(--white);font-size:22px;cursor:pointer;padding:4px;line-height:1}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:45}
 
-/* ─── SIDEBAR ────────────────────────────────────────── */
-#sidebar {
-  width: 240px;
-  min-width: 240px;
-  background: var(--navy2);
-  border-right: 1px solid rgba(201,168,76,.15);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  position: fixed;
-  z-index: 10;
-}
+/* ── MAIN ── */
+#main{margin-left:var(--sidebar);flex:1;min-height:100vh;overflow-y:auto;padding:28px 32px}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+.page-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--white)}
+.page-sub{font-size:13px;color:var(--muted);margin-top:3px}
 
-.logo {
-  padding: 28px 24px 20px;
-  border-bottom: 1px solid rgba(201,168,76,.15);
-}
-.logo-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 22px;
-  color: var(--gold2);
-  letter-spacing: .5px;
-}
-.logo-sub {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;white-space:nowrap}
+.btn-primary{background:var(--gold);color:var(--navy)}.btn-primary:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--white);border:1px solid rgba(255,255,255,.1)}.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.btn-danger{background:rgba(224,82,82,.15);color:var(--danger);border:1px solid rgba(224,82,82,.25)}.btn-danger:hover{background:rgba(224,82,82,.25)}
+.btn-sm{padding:6px 12px;font-size:12px}
 
-nav { padding: 16px 12px; flex: 1; }
-.nav-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.8px;
-  color: var(--muted);
-  padding: 0 12px;
-  margin: 18px 0 6px;
-}
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--navy2);border:1px solid rgba(201,168,76,.15);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);opacity:0;transition:opacity .2s}
+.stat-card:hover::before{opacity:1}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+.stat-value{font-size:28px;font-weight:700;color:var(--white);margin-top:4px;line-height:1}
+.stat-icon{position:absolute;right:14px;top:14px;font-size:20px;opacity:.25}
 
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--muted);
-  transition: all .18s;
-  margin-bottom: 2px;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-}
-.nav-item:hover { background: rgba(255,255,255,.05); color: var(--white); }
-.nav-item.active { background: rgba(201,168,76,.12); color: var(--gold2); font-weight: 500; }
-.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+/* ── CARD ── */
+.card{background:var(--navy2);border:1px solid rgba(201,168,76,.12);border-radius:var(--radius);overflow:hidden}
+.card-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-title{font-size:15px;font-weight:600;color:var(--white)}
+.card-body{padding:20px}
 
-.sidebar-footer {
-  padding: 16px 24px;
-  border-top: 1px solid rgba(201,168,76,.1);
-  font-size: 11px;
-  color: var(--muted);
-}
-#api-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  font-size: 11px;
-}
-.dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #555;
-  transition: background .3s;
-}
-.dot.ok  { background: var(--success); }
-.dot.err { background: var(--danger); }
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+thead th{text-align:left;padding:11px 13px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap}
+tbody td{padding:12px 13px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--white);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.025)}
 
-/* ─── MAIN ───────────────────────────────────────────── */
-#main {
-  margin-left: 240px;
-  flex: 1;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 32px 36px;
-}
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:500}
+.badge-m{background:rgba(61,186,122,.15);color:#3dba7a}
+.badge-f{background:rgba(224,132,82,.15);color:#e08452}
+.badge-unit{background:rgba(201,168,76,.15);color:var(--gold2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* ─── PAGE HEADER ────────────────────────────────────── */
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 28px;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.page-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--white); }
-.page-sub   { font-size: 13px; color: var(--muted); margin-top: 3px; }
+/* ── SEARCH ── */
+.search-bar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 13px;min-width:0;flex:1}
+.search-bar input{background:none;border:none;outline:none;color:var(--white);font-family:var(--font);font-size:13px;width:100%}
+.search-bar input::placeholder{color:var(--muted)}
 
-/* ─── BUTTON ─────────────────────────────────────────── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all .15s;
-  border: none;
-}
-.btn-primary {
-  background: var(--gold);
-  color: var(--navy);
-}
-.btn-primary:hover { background: var(--gold2); transform: translateY(-1px); }
-.btn-ghost {
-  background: rgba(255,255,255,.06);
-  color: var(--white);
-  border: 1px solid rgba(255,255,255,.1);
-}
-.btn-ghost:hover { background: rgba(255,255,255,.1); }
-.btn-danger {
-  background: rgba(224,82,82,.15);
-  color: var(--danger);
-  border: 1px solid rgba(224,82,82,.25);
-}
-.btn-danger:hover { background: rgba(224,82,82,.25); }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
+/* ── FORM ── */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px}
+.form-control{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 13px;color:var(--white);font-family:var(--font);font-size:13px;outline:none;transition:border-color .15s}
+.form-control:focus{border-color:var(--gold)}
+.form-control option{background:var(--navy2);color:var(--white)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-/* ─── STATS CARDS ────────────────────────────────────── */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px;
-  margin-bottom: 28px;
+/* ── MULTI-SELECT custom ── */
+.multi-select-wrap{position:relative}
+.multi-select-display{
+  width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:10px 13px;color:var(--white);font-family:var(--font);
+  font-size:13px;cursor:pointer;transition:border-color .15s;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;
+  user-select:none;
 }
-.stat-card {
-  background: var(--navy2);
-  border: 1px solid rgba(201,168,76,.15);
-  border-radius: var(--radius);
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
+.multi-select-display:hover,.multi-select-display.open{border-color:var(--gold)}
+.multi-select-tags{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+.ms-tag{background:rgba(201,168,76,.2);color:var(--gold2);border-radius:99px;padding:2px 8px;font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.ms-tag-x{cursor:pointer;opacity:.7;font-size:13px;line-height:1}.ms-tag-x:hover{opacity:1}
+.ms-placeholder{color:var(--muted);font-size:13px}
+.multi-select-arrow{flex-shrink:0;font-size:11px;opacity:.6;transition:transform .2s}
+.multi-select-arrow.open{transform:rotate(180deg)}
+.multi-select-dropdown{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;
+  background:var(--navy3);border:1px solid rgba(201,168,76,.2);border-radius:10px;
+  max-height:200px;overflow-y:auto;padding:6px;display:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
 }
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--gold);
-  opacity: 0;
-  transition: opacity .2s;
-}
-.stat-card:hover::before { opacity: 1; }
-.stat-label  { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
-.stat-value  { font-size: 32px; font-weight: 700; color: var(--white); margin-top: 6px; line-height: 1; }
-.stat-icon   { position: absolute; right: 16px; top: 16px; font-size: 22px; opacity: .25; }
+.multi-select-dropdown.open{display:block}
+.ms-option{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;cursor:pointer;font-size:13px;transition:background .12s}
+.ms-option:hover{background:rgba(255,255,255,.06)}
+.ms-option.selected{background:rgba(201,168,76,.1)}
+.ms-option input[type=checkbox]{accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;cursor:pointer}
+.ms-option label{cursor:pointer;flex:1}
 
-/* ─── CARD ───────────────────────────────────────────── */
-.card {
-  background: var(--navy2);
-  border: 1px solid rgba(201,168,76,.12);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.card-header {
-  padding: 18px 22px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.card-title { font-size: 15px; font-weight: 600; color: var(--white); }
-.card-body  { padding: 22px; }
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadein .15s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.modal{background:var(--navy2);border:1px solid rgba(201,168,76,.2);border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;animation:slideup .2s ease}
+@keyframes slideup{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--navy2);z-index:1}
+.modal-title{font-family:'DM Serif Display',serif;font-size:19px;color:var(--gold2)}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;line-height:1}.modal-close:hover{color:var(--white)}
+.modal-body{padding:18px 22px 22px}
 
-/* ─── TABLE ──────────────────────────────────────────── */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-thead th {
-  text-align: left;
-  padding: 12px 14px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--muted);
-  border-bottom: 1px solid rgba(255,255,255,.07);
-  white-space: nowrap;
-}
-tbody td {
-  padding: 13px 14px;
-  border-bottom: 1px solid rgba(255,255,255,.04);
-  color: var(--white);
-  vertical-align: middle;
-}
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: rgba(255,255,255,.025); }
+/* ── ACCORDION ── */
+.accordion-item{background:var(--navy2);border:1px solid rgba(201,168,76,.12);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.accordion-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;transition:background .15s}
+.accordion-header:hover{background:rgba(255,255,255,.02)}
+.accordion-arrow{font-size:12px;color:var(--muted);transition:transform .2s}
+.accordion-arrow.open{transform:rotate(90deg)}
+.accordion-body{display:none;border-top:1px solid rgba(255,255,255,.06)}
+.accordion-body.open{display:block}
 
-/* ─── BADGE ──────────────────────────────────────────── */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 99px;
-  font-size: 11px;
-  font-weight: 500;
-}
-.badge-m { background: rgba(61,186,122,.15); color: #3dba7a; }
-.badge-f { background: rgba(224,132,82,.15); color: #e08452; }
-.badge-unit { background: rgba(201,168,76,.15); color: var(--gold2); }
+/* ── GENDER BAR ── */
+.gender-bar-wrap{display:flex;gap:3px;height:5px;border-radius:99px;overflow:hidden;margin-top:5px}
+.gender-bar-m{background:#3dba7a;border-radius:99px 0 0 99px;transition:width .4s}
+.gender-bar-f{background:#e08452;border-radius:0 99px 99px 0;transition:width .4s;flex:1}
 
-/* ─── SEARCH BAR ─────────────────────────────────────── */
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 8px;
-  padding: 8px 14px;
-  min-width: 200px;
-}
-.search-bar input {
-  background: none;
-  border: none;
-  outline: none;
-  color: var(--white);
-  font-family: var(--font);
-  font-size: 13px;
-  width: 100%;
-}
-.search-bar input::placeholder { color: var(--muted); }
+/* ── AVATAR ── */
+.avatar{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.av-m{background:rgba(61,186,122,.2);color:#3dba7a}
+.av-f{background:rgba(224,132,82,.2);color:#e08452}
 
-/* ─── MODAL ──────────────────────────────────────────── */
-.modal-bg {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.65);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: fadein .15s ease;
-}
-@keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;right:16px;z-index:300;display:flex;flex-direction:column;gap:8px;max-width:320px;width:calc(100% - 32px)}
+.toast-item{background:var(--navy3);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px 16px;font-size:13px;display:flex;align-items:center;gap:8px;animation:slideup .2s ease}
+.toast-item.ok{border-left:3px solid var(--success)}.toast-item.err{border-left:3px solid var(--danger)}
 
-.modal {
-  background: var(--navy2);
-  border: 1px solid rgba(201,168,76,.2);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: slideup .2s ease;
-}
-@keyframes slideup { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+/* ── MISC ── */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:32px;opacity:.4;margin-bottom:10px}
+.spinner{width:30px;height:30px;border:3px solid rgba(201,168,76,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chart-container{position:relative;height:260px}
 
-.modal-header {
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid rgba(255,255,255,.07);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #topbar{display:flex}
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #overlay.open{display:block}
+  #main{margin-left:0;padding:70px 14px 20px}
+  .page-title{font-size:22px}
+  .form-row{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .graph-layout{grid-template-columns:1fr!important}
+  .card-header{flex-direction:column;align-items:flex-start}
+  .search-bar{width:100%}
+  table{font-size:12px}
+  thead th,tbody td{padding:9px 10px}
+  .btn{padding:8px 14px;font-size:12px}
 }
-.modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--gold2); }
-.modal-close {
-  background: none; border: none; color: var(--muted);
-  font-size: 20px; cursor: pointer; line-height: 1; padding: 4px;
-}
-.modal-close:hover { color: var(--white); }
-.modal-body { padding: 20px 24px 24px; }
-
-/* ─── FORM ───────────────────────────────────────────── */
-.form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-.form-control {
-  width: 100%;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 8px;
-  padding: 10px 14px;
-  color: var(--white);
-  font-family: var(--font);
-  font-size: 14px;
-  outline: none;
-  transition: border-color .15s;
-}
-.form-control:focus { border-color: var(--gold); }
-.form-control option { background: var(--navy2); color: var(--white); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-/* ─── ACCORDION (unite detail) ───────────────────────── */
-.accordion-item {
-  background: var(--navy2);
-  border: 1px solid rgba(201,168,76,.12);
-  border-radius: var(--radius);
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-.accordion-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  cursor: pointer;
-  transition: background .15s;
-}
-.accordion-header:hover { background: rgba(255,255,255,.02); }
-.accordion-arrow {
-  font-size: 12px;
-  color: var(--muted);
-  transition: transform .2s;
-}
-.accordion-arrow.open { transform: rotate(90deg); }
-.accordion-body { display: none; border-top: 1px solid rgba(255,255,255,.06); }
-.accordion-body.open { display: block; }
-
-/* ─── GENDER BAR ─────────────────────────────────────── */
-.gender-bar-wrap { display: flex; gap: 3px; height: 6px; border-radius: 99px; overflow: hidden; margin-top: 6px; }
-.gender-bar-m { background: #3dba7a; border-radius: 99px 0 0 99px; transition: width .4s; }
-.gender-bar-f { background: #e08452; border-radius: 0 99px 99px 0; transition: width .4s; flex: 1; }
-
-/* ─── TOAST ──────────────────────────────────────────── */
-#toast {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.toast-item {
-  background: var(--navy3);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 10px;
-  padding: 12px 18px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  animation: slideup .2s ease;
-  min-width: 220px;
-}
-.toast-item.ok  { border-left: 3px solid var(--success); }
-.toast-item.err { border-left: 3px solid var(--danger); }
-
-/* ─── EMPTY STATE ────────────────────────────────────── */
-.empty { text-align: center; padding: 48px 20px; color: var(--muted); }
-.empty-icon { font-size: 36px; opacity: .4; margin-bottom: 12px; }
-
-/* ─── LOADING ────────────────────────────────────────── */
-.spinner {
-  width: 32px; height: 32px;
-  border: 3px solid rgba(201,168,76,.2);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-  margin: 48px auto;
-}
-@keyframes spin { to { transform: rotate(360deg) } }
-
-/* ─── CHART CONTAINER ────────────────────────────────── */
-.chart-container { position: relative; height: 280px; }
-
-/* ─── AVATAR ─────────────────────────────────────────── */
-.avatar {
-  width: 34px; height: 34px; border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 600; flex-shrink: 0;
-}
-.av-m { background: rgba(61,186,122,.2); color: #3dba7a; }
-.av-f { background: rgba(224,132,82,.2); color: #e08452; }
-
-/* ─── RESPONSIVE ─────────────────────────────────────── */
-@media (max-width: 768px) {
-  #sidebar { width: 200px; min-width: 200px; }
-  #main    { margin-left: 200px; padding: 20px 16px; }
-  .form-row { grid-template-columns: 1fr; }
+@media(max-width:400px){
+  .stats-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════════
-     SIDEBAR
-═══════════════════════════════════════════════════════ -->
+<!-- TOPBAR mobile -->
+<div id="topbar">
+  <button id="menu-btn" onclick="toggleSidebar()">☰</button>
+  <div class="logo-title">GestÉtu</div>
+</div>
+<div id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
 <aside id="sidebar">
   <div class="logo">
     <div class="logo-title">GestÉtu</div>
     <div class="logo-sub">Gestion académique</div>
   </div>
-
   <nav>
     <div class="nav-label">Navigation</div>
-    <button class="nav-item active" onclick="showPage('dashboard')">
-      <span class="nav-icon">📊</span> Tableau de bord
-    </button>
-    <button class="nav-item" onclick="showPage('etudiants')">
-      <span class="nav-icon">🎓</span> Étudiants
-    </button>
-    <button class="nav-item" onclick="showPage('unites')">
-      <span class="nav-icon">📚</span> Unités d'enseignement
-    </button>
+    <button class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">📊</span>Tableau de bord</button>
+    <button class="nav-item" onclick="showPage('etudiants')"><span class="nav-icon">🎓</span>Étudiants</button>
+    <button class="nav-item" onclick="showPage('unites')"><span class="nav-icon">📚</span>Unités</button>
     <div class="nav-label">Analyses</div>
-    <button class="nav-item" onclick="showPage('graphique')">
-      <span class="nav-icon">📈</span> Graphique genre
-    </button>
+    <button class="nav-item" onclick="showPage('graphique')"><span class="nav-icon">📈</span>Graphique genre</button>
   </nav>
-
   <div class="sidebar-footer">
     <div>API Backend</div>
-    <div id="api-status">
-      <div class="dot" id="status-dot"></div>
-      <span id="status-text">Connexion…</span>
-    </div>
+    <div id="api-status"><div class="dot" id="status-dot"></div><span id="status-text">Connexion…</span></div>
   </div>
 </aside>
 
-<!-- ════════════════════════════════════════════════════
-     MAIN
-═══════════════════════════════════════════════════════ -->
+<!-- MAIN -->
 <main id="main">
 
-  <!-- ── DASHBOARD ── -->
+  <!-- DASHBOARD -->
   <section id="page-dashboard">
     <div class="page-header">
-      <div>
-        <div class="page-title">Tableau de bord</div>
-        <div class="page-sub">Vue d'ensemble en temps réel</div>
-      </div>
+      <div><div class="page-title">Tableau de bord</div><div class="page-sub">Vue d'ensemble en temps réel</div></div>
       <button class="btn btn-ghost" onclick="loadDashboard()">↻ Actualiser</button>
     </div>
-
-    <div class="stats-grid" id="dash-stats">
+    <div class="stats-grid">
       <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-label">Unités</div><div class="stat-value" id="s-unites">—</div></div>
       <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-label">Étudiants</div><div class="stat-value" id="s-total">—</div></div>
       <div class="stat-card"><div class="stat-icon">♂</div><div class="stat-label">Garçons</div><div class="stat-value" id="s-m">—</div></div>
       <div class="stat-card"><div class="stat-icon">♀</div><div class="stat-label">Filles</div><div class="stat-value" id="s-f">—</div></div>
     </div>
-
-    <!-- Accordéon unités + étudiants -->
-    <div class="card" style="margin-bottom:24px;">
+    <div class="card">
       <div class="card-header">
         <span class="card-title">Étudiants par unité</span>
         <button class="btn btn-primary btn-sm" onclick="openModalEtudiant()">+ Inscrire</button>
       </div>
-      <div class="card-body" id="dash-unites">
-        <div class="spinner"></div>
-      </div>
+      <div class="card-body" id="dash-unites"><div class="spinner"></div></div>
     </div>
   </section>
 
-  <!-- ── ÉTUDIANTS ── -->
+  <!-- ÉTUDIANTS -->
   <section id="page-etudiants" style="display:none">
     <div class="page-header">
-      <div>
-        <div class="page-title">Étudiants</div>
-        <div class="page-sub">Gérez les inscriptions</div>
-      </div>
+      <div><div class="page-title">Étudiants</div><div class="page-sub">Gérez les inscriptions</div></div>
       <button class="btn btn-primary" onclick="openModalEtudiant()">+ Nouvel étudiant</button>
     </div>
-
     <div class="card">
-      <div class="card-header">
-        <div class="search-bar">
-          <span>🔍</span>
-          <input id="search-et" type="text" placeholder="Chercher par nom, unité…" oninput="filterEtudiants(this.value)" />
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="form-control" style="width:auto;padding:7px 12px;font-size:12px;" id="filter-genre" onchange="filterEtudiants(document.getElementById('search-et').value)">
-            <option value="">Tous les genres</option>
-            <option value="M">Garçons</option>
-            <option value="F">Filles</option>
+      <div class="card-header" style="gap:8px">
+        <div class="search-bar"><span>🔍</span><input id="search-et" type="text" placeholder="Matricule, nom, unité…" oninput="filterEtudiants(this.value)"/></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select class="form-control" style="width:auto;padding:7px 11px;font-size:12px" id="filter-genre" onchange="filterEtudiants(document.getElementById('search-et').value)">
+            <option value="">Tous genres</option><option value="M">Garçons</option><option value="F">Filles</option>
           </select>
-          <select class="form-control" style="width:auto;padding:7px 12px;font-size:12px;" id="filter-unite" onchange="filterEtudiants(document.getElementById('search-et').value)">
-            <option value="">Toutes les unités</option>
+          <select class="form-control" style="width:auto;padding:7px 11px;font-size:12px" id="filter-unite" onchange="filterEtudiants(document.getElementById('search-et').value)">
+            <option value="">Toutes unités</option>
           </select>
         </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th></th><th>Nom complet</th><th>Âge</th><th>Genre</th><th>Ethnie</th><th>Unité</th><th>Inscrit le</th><th>Actions</th>
-            </tr>
-          </thead>
+          <thead><tr><th></th><th>Matricule</th><th>Nom complet</th><th>Âge</th><th>Genre</th><th>Unités</th><th>Inscrit le</th><th>Actions</th></tr></thead>
           <tbody id="tbody-etudiants"></tbody>
         </table>
-        <div id="et-empty" class="empty" style="display:none">
-          <div class="empty-icon">🎓</div>
-          <p>Aucun étudiant trouvé</p>
-        </div>
+        <div id="et-empty" class="empty" style="display:none"><div class="empty-icon">🎓</div><p>Aucun étudiant trouvé</p></div>
         <div id="et-loading" class="spinner"></div>
       </div>
     </div>
   </section>
 
-  <!-- ── UNITÉS ── -->
+  <!-- UNITÉS -->
   <section id="page-unites" style="display:none">
     <div class="page-header">
-      <div>
-        <div class="page-title">Unités d'enseignement</div>
-        <div class="page-sub">Gérez les cours et professeurs</div>
-      </div>
+      <div><div class="page-title">Unités d'enseignement</div><div class="page-sub">Cours et professeurs</div></div>
       <button class="btn btn-primary" onclick="openModalUnite()">+ Nouvelle unité</button>
     </div>
-
-    <div id="unites-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
-      <div class="spinner" style="grid-column:1/-1;"></div>
+    <div id="unites-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+      <div class="spinner" style="grid-column:1/-1"></div>
     </div>
   </section>
 
-  <!-- ── GRAPHIQUE ── -->
+  <!-- GRAPHIQUE -->
   <section id="page-graphique" style="display:none">
     <div class="page-header">
-      <div>
-        <div class="page-title">Répartition par genre</div>
-        <div class="page-sub">Garçons et filles par unité d'enseignement</div>
-      </div>
+      <div><div class="page-title">Répartition par genre</div><div class="page-sub">Garçons et filles par unité</div></div>
     </div>
-
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start;" class="graph-layout">
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start" class="graph-layout">
       <div class="card">
         <div class="card-header"><span class="card-title">Graphique comparatif</span></div>
         <div class="card-body">
-          <div style="display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap;">
-            <span style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)">
-              <span style="width:12px;height:12px;border-radius:3px;background:#3dba7a;display:inline-block;"></span>Garçons
-            </span>
-            <span style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)">
-              <span style="width:12px;height:12px;border-radius:3px;background:#e08452;display:inline-block;"></span>Filles
-            </span>
+          <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:11px;height:11px;border-radius:3px;background:#3dba7a;display:inline-block"></span>Garçons</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:11px;height:11px;border-radius:3px;background:#e08452;display:inline-block"></span>Filles</span>
           </div>
-          <div class="chart-container">
-            <canvas id="genreChart" role="img" aria-label="Nombre de garçons et filles par unité">Chargement…</canvas>
-          </div>
+          <div class="chart-container"><canvas id="genreChart" role="img" aria-label="Graphique genre par unité">Chargement…</canvas></div>
         </div>
       </div>
-
       <div class="card">
-        <div class="card-header"><span class="card-title">Détails par unité</span></div>
-        <div class="card-body" id="graph-details">
-          <div class="spinner"></div>
-        </div>
+        <div class="card-header"><span class="card-title">Détails</span></div>
+        <div class="card-body" id="graph-details"><div class="spinner"></div></div>
       </div>
     </div>
   </section>
-
 </main>
 
-<!-- ═══════════════════════════════════════════════════
-     MODAL ÉTUDIANT
-════════════════════════════════════════════════════ -->
+<!-- MODAL ÉTUDIANT -->
 <div id="modal-etudiant" class="modal-bg" style="display:none">
   <div class="modal">
     <div class="modal-header">
@@ -609,49 +323,39 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
       <button class="modal-close" onclick="closeModal('modal-etudiant')">✕</button>
     </div>
     <div class="modal-body">
-      <input type="hidden" id="et-id" />
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Nom *</label>
-          <input class="form-control" id="et-nom" placeholder="Ex : Nkomo" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Prénom *</label>
-          <input class="form-control" id="et-prenom" placeholder="Ex : Paul" />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Date de naissance *</label>
-          <input class="form-control" id="et-dob" type="date" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Âge *</label>
-          <input class="form-control" id="et-age" type="number" min="16" max="80" placeholder="20" />
-        </div>
-      </div>
+      <input type="hidden" id="et-id"/>
       <div class="form-group">
-        <label class="form-label">Lieu de naissance *</label>
-        <input class="form-control" id="et-lieu" placeholder="Ex : Yaoundé" />
+        <label class="form-label">Matricule *</label>
+        <input class="form-control" id="et-matricule" placeholder="Ex : 22G1001"/>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nom *</label><input class="form-control" id="et-nom" placeholder="Ex : Nkomo"/></div>
+        <div class="form-group"><label class="form-label">Prénom *</label><input class="form-control" id="et-prenom" placeholder="Ex : Paul"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date de naissance *</label><input class="form-control" id="et-dob" type="date"/></div>
+        <div class="form-group"><label class="form-label">Âge *</label><input class="form-control" id="et-age" type="number" min="16" max="80" placeholder="20"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Lieu de naissance *</label><input class="form-control" id="et-lieu" placeholder="Ex : Yaoundé"/></div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Genre *</label>
-          <select class="form-control" id="et-genre">
-            <option value="M">Masculin</option>
-            <option value="F">Féminin</option>
-          </select>
+          <select class="form-control" id="et-genre"><option value="M">Masculin</option><option value="F">Féminin</option></select>
         </div>
-        <div class="form-group">
-          <label class="form-label">Ethnie</label>
-          <input class="form-control" id="et-ethnie" placeholder="Ex : Beti" />
-        </div>
+        <div class="form-group"><label class="form-label">Ethnie</label><input class="form-control" id="et-ethnie" placeholder="Ex : Beti"/></div>
       </div>
+      <!-- ✅ MULTI-SELECT UNITÉS -->
       <div class="form-group">
-        <label class="form-label">Unité d'enseignement *</label>
-        <select class="form-control" id="et-unite"></select>
+        <label class="form-label">Unités d'enseignement (plusieurs possibles)</label>
+        <div class="multi-select-wrap" id="ms-wrap">
+          <div class="multi-select-display" id="ms-display" onclick="toggleMsDropdown()">
+            <div class="multi-select-tags" id="ms-tags"><span class="ms-placeholder">Sélectionner des unités…</span></div>
+            <span class="multi-select-arrow" id="ms-arrow">▼</span>
+          </div>
+          <div class="multi-select-dropdown" id="ms-dropdown"></div>
+        </div>
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
         <button class="btn btn-ghost" onclick="closeModal('modal-etudiant')">Annuler</button>
         <button class="btn btn-primary" id="btn-save-et" onclick="saveEtudiant()">Enregistrer</button>
       </div>
@@ -659,9 +363,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     MODAL UNITÉ
-════════════════════════════════════════════════════ -->
+<!-- MODAL UNITÉ -->
 <div id="modal-unite" class="modal-bg" style="display:none">
   <div class="modal">
     <div class="modal-header">
@@ -669,20 +371,11 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
       <button class="modal-close" onclick="closeModal('modal-unite')">✕</button>
     </div>
     <div class="modal-body">
-      <input type="hidden" id="un-id" />
-      <div class="form-group">
-        <label class="form-label">Nom de l'unité *</label>
-        <input class="form-control" id="un-nom" placeholder="Ex : Mathématiques L1" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Professeur responsable *</label>
-        <input class="form-control" id="un-prof" placeholder="Ex : Dr. Mbarga" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" id="un-desc" rows="3" placeholder="Description du cours…"></textarea>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <input type="hidden" id="un-id"/>
+      <div class="form-group"><label class="form-label">Nom de l'unité *</label><input class="form-control" id="un-nom" placeholder="Ex : Mathématiques L1"/></div>
+      <div class="form-group"><label class="form-label">Professeur responsable *</label><input class="form-control" id="un-prof" placeholder="Ex : Dr. Mbarga"/></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="un-desc" rows="3" placeholder="Description du cours…"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
         <button class="btn btn-ghost" onclick="closeModal('modal-unite')">Annuler</button>
         <button class="btn btn-primary" onclick="saveUnite()">Enregistrer</button>
       </div>
@@ -690,152 +383,196 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     MODAL DÉTAIL UNITÉ
-════════════════════════════════════════════════════ -->
+<!-- MODAL DÉTAIL UNITÉ -->
 <div id="modal-unite-detail" class="modal-bg" style="display:none">
-  <div class="modal" style="max-width:620px;">
+  <div class="modal" style="max-width:600px">
     <div class="modal-header">
       <div class="modal-title" id="ud-title">Étudiants</div>
       <button class="modal-close" onclick="closeModal('modal-unite-detail')">✕</button>
     </div>
-    <div class="modal-body" id="ud-body">
-      <div class="spinner"></div>
-    </div>
+    <div class="modal-body" id="ud-body"><div class="spinner"></div></div>
   </div>
 </div>
 
-<!-- ─── TOAST ──────────────────────────────────────── -->
 <div id="toast"></div>
 
-<!-- ═══════════════════════════════════════════════════
-     JAVASCRIPT
-════════════════════════════════════════════════════ -->
 <script>
-/* ───────────────────────────────────────────────────
-   CONFIG — remplacez l'URL par celle de votre backend Render
-─────────────────────────────────────────────────── */
+/* ── CONFIG ── */
 const API = 'https://gestion-etudiants-1r26.onrender.com/api';
 
-/* ───────────────── UTILS ────────────────────────── */
-function toast(msg, type='ok') {
-  const t = document.createElement('div');
-  t.className = `toast-item ${type}`;
-  t.textContent = (type==='ok' ? '✓ ' : '✗ ') + msg;
+/* ── UTILS ── */
+function toast(msg,type='ok'){
+  const t=document.createElement('div');
+  t.className=`toast-item ${type}`;
+  t.textContent=(type==='ok'?'✓ ':'✗ ')+msg;
   document.getElementById('toast').appendChild(t);
-  setTimeout(() => t.remove(), 3500);
+  setTimeout(()=>t.remove(),3500);
 }
 
-async function api(path, method='GET', body=null) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
-  if (body) opts.body = JSON.stringify(body);
-  try {
-    const res = await fetch(API + path, opts);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
+async function apiFetch(path,method='GET',body=null){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(body) opts.body=JSON.stringify(body);
+  try{
+    const res=await fetch(API+path,opts);
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
       throw new Error(JSON.stringify(err));
     }
-    if (res.status === 204) return null;
+    if(res.status===204) return null;
     return res.json();
-  } catch(e) {
-    if (e.message === 'Failed to fetch') {
-      throw new Error('Impossible de joindre le serveur backend.');
-    }
+  }catch(e){
+    if(e.message==='Failed to fetch') throw new Error('Impossible de joindre le serveur.');
     throw e;
   }
 }
 
-function fmt(dateStr) {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
-}
+function fmt(d){if(!d)return'—';return new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}
+function ini(p,n){return((p?.[0]||'')+(n?.[0]||'')).toUpperCase()}
 
-function initials(prenom, nom) {
-  return ((prenom?.[0]||'') + (nom?.[0]||'')).toUpperCase();
+/* ── SIDEBAR MOBILE ── */
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
 }
-
-/* ───────────────── STATUS CHECK ─────────────────── */
-async function checkStatus() {
-  try {
-    await fetch(API + '/etudiants/?page=1');
-    document.getElementById('status-dot').className  = 'dot ok';
-    document.getElementById('status-text').textContent = 'Connecté';
-  } catch {
-    document.getElementById('status-dot').className  = 'dot err';
-    document.getElementById('status-text').textContent = 'Hors ligne';
+document.addEventListener('click',e=>{
+  if(window.innerWidth<=768 && !e.target.closest('#sidebar') && !e.target.closest('#menu-btn')){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
   }
-}
-
-/* ───────────────── NAVIGATION ───────────────────── */
-const pages = ['dashboard','etudiants','unites','graphique'];
-
-function showPage(id) {
-  pages.forEach(p => document.getElementById('page-'+p).style.display = 'none');
-  document.getElementById('page-'+id).style.display = 'block';
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el => {
-    if (el.getAttribute('onclick')?.includes("'"+id+"'")) el.classList.add('active');
-  });
-  if (id==='dashboard') loadDashboard();
-  if (id==='etudiants') loadEtudiants();
-  if (id==='unites')    loadUnites();
-  if (id==='graphique') loadGraphique();
-}
-
-/* ───────────────── MODAL HELPERS ────────────────── */
-function closeModal(id) { document.getElementById(id).style.display='none'; }
-
-document.querySelectorAll('.modal-bg').forEach(bg => {
-  bg.addEventListener('click', e => { if (e.target === bg) bg.style.display='none'; });
 });
 
-/* ═══════════════════════════════════════════════════
-   DASHBOARD
-═══════════════════════════════════════════════════ */
-let allUnites = [], allEtudiants = [];
-
-async function loadDashboard() {
-  document.getElementById('dash-unites').innerHTML = '<div class="spinner"></div>';
-  try {
-    const [unites, stats] = await Promise.all([
-      api('/unites/'),
-      api('/unites/statistiques-genre/')
-    ]);
-    allUnites = unites.results || unites;
-    const totalM = stats.reduce((s,u)=>s+u.masculins,0);
-    const totalF = stats.reduce((s,u)=>s+u.feminins,0);
-    const total  = totalM+totalF;
-    document.getElementById('s-unites').textContent = allUnites.length;
-    document.getElementById('s-total').textContent  = total;
-    document.getElementById('s-m').textContent      = totalM;
-    document.getElementById('s-f').textContent      = totalF;
-    renderDashUnites(stats);
-  } catch(e) {
-    document.getElementById('dash-unites').innerHTML = '<p style="color:var(--danger);padding:20px">Erreur de chargement. Vérifiez la connexion API.</p>';
+/* ── STATUS ── */
+async function checkStatus(){
+  try{
+    await fetch(API+'/unites/?page=1');
+    document.getElementById('status-dot').className='dot ok';
+    document.getElementById('status-text').textContent='Connecté';
+  }catch{
+    document.getElementById('status-dot').className='dot err';
+    document.getElementById('status-text').textContent='Hors ligne';
   }
 }
 
-function renderDashUnites(stats) {
-  const el = document.getElementById('dash-unites');
-  if (!stats.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📚</div><p>Aucune unité créée</p></div>'; return; }
-  el.innerHTML = stats.map(u => {
-    const pctM = u.total ? Math.round(u.masculins/u.total*100) : 0;
-    const pctF = 100 - pctM;
-    return `
-    <div class="accordion-item">
-      <div class="accordion-header" onclick="toggleAccordion(this, ${u.id})">
+/* ── NAVIGATION ── */
+const PAGES=['dashboard','etudiants','unites','graphique'];
+function showPage(id){
+  PAGES.forEach(p=>document.getElementById('page-'+p).style.display='none');
+  document.getElementById('page-'+id).style.display='block';
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.classList.toggle('active',el.getAttribute('onclick')?.includes("'"+id+"'"));
+  });
+  if(window.innerWidth<=768){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
+  if(id==='dashboard') loadDashboard();
+  if(id==='etudiants') loadEtudiants();
+  if(id==='unites')    loadUnites();
+  if(id==='graphique') loadGraphique();
+}
+
+function closeModal(id){document.getElementById(id).style.display='none'}
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.style.display='none'});
+});
+
+/* ── MULTI-SELECT ── */
+let msSelected=[];
+let msOptions=[];
+
+function buildMsDropdown(options,selected=[]){
+  msOptions=options;
+  msSelected=[...selected];
+  const dd=document.getElementById('ms-dropdown');
+  dd.innerHTML=options.length?options.map(u=>`
+    <div class="ms-option${selected.includes(u.id)?' selected':''}" onclick="toggleMsOption(${u.id},'${u.nom_unite.replace(/'/g,"\\'")}')">
+      <input type="checkbox" id="msc-${u.id}" ${selected.includes(u.id)?'checked':''} onclick="event.stopPropagation()"/>
+      <label for="msc-${u.id}">${u.nom_unite} <span style="font-size:11px;color:var(--muted)">— ${u.nom_prof}</span></label>
+    </div>`).join('')
+    :'<div style="padding:12px;color:var(--muted);font-size:13px;text-align:center">Aucune unité disponible</div>';
+  renderMsTags();
+}
+
+function toggleMsOption(id,nom){
+  const idx=msSelected.indexOf(id);
+  if(idx>-1) msSelected.splice(idx,1);
+  else msSelected.push(id);
+  const opt=document.getElementById('ms-dropdown').querySelector(`[onclick*="toggleMsOption(${id},"]`);
+  if(opt){
+    opt.classList.toggle('selected',msSelected.includes(id));
+    const cb=opt.querySelector('input');
+    if(cb) cb.checked=msSelected.includes(id);
+  }
+  renderMsTags();
+}
+
+function renderMsTags(){
+  const wrap=document.getElementById('ms-tags');
+  if(!msSelected.length){
+    wrap.innerHTML='<span class="ms-placeholder">Sélectionner des unités…</span>';
+    return;
+  }
+  wrap.innerHTML=msSelected.map(id=>{
+    const u=msOptions.find(o=>o.id===id);
+    return u?`<span class="ms-tag">${u.nom_unite}<span class="ms-tag-x" onclick="event.stopPropagation();toggleMsOption(${id},'')">×</span></span>`:'';
+  }).join('');
+}
+
+function toggleMsDropdown(){
+  const dd=document.getElementById('ms-dropdown');
+  const arrow=document.getElementById('ms-arrow');
+  const disp=document.getElementById('ms-display');
+  const open=dd.classList.toggle('open');
+  arrow.classList.toggle('open',open);
+  disp.classList.toggle('open',open);
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#ms-wrap')){
+    document.getElementById('ms-dropdown')?.classList.remove('open');
+    document.getElementById('ms-arrow')?.classList.remove('open');
+    document.getElementById('ms-display')?.classList.remove('open');
+  }
+});
+
+/* ══════════════════════════════
+   DASHBOARD
+══════════════════════════════ */
+let allUnites=[];
+
+async function loadDashboard(){
+  document.getElementById('dash-unites').innerHTML='<div class="spinner"></div>';
+  try{
+    const [unites,stats]=await Promise.all([apiFetch('/unites/'),apiFetch('/unites/statistiques-genre/')]);
+    allUnites=unites.results||unites;
+    const totalM=stats.reduce((s,u)=>s+u.masculins,0);
+    const totalF=stats.reduce((s,u)=>s+u.feminins,0);
+    document.getElementById('s-unites').textContent=allUnites.length;
+    document.getElementById('s-total').textContent=totalM+totalF;
+    document.getElementById('s-m').textContent=totalM;
+    document.getElementById('s-f').textContent=totalF;
+    renderDashUnites(stats);
+  }catch(e){
+    document.getElementById('dash-unites').innerHTML=`<p style="color:var(--danger);padding:20px">⚠ ${e.message}</p>`;
+  }
+}
+
+function renderDashUnites(stats){
+  const el=document.getElementById('dash-unites');
+  if(!stats.length){el.innerHTML='<div class="empty"><div class="empty-icon">📚</div><p>Aucune unité créée</p></div>';return}
+  el.innerHTML=stats.map(u=>{
+    const pctM=u.total?Math.round(u.masculins/u.total*100):0;
+    return`<div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAcc(this,${u.id})">
         <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span style="font-weight:600;font-size:14px;">${u.nom_unite}</span>
-            <span class="badge badge-unit">${u.total} étudiant${u.total>1?'s':''}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-weight:600;font-size:14px">${u.nom_unite}</span>
+            <span class="badge" style="background:rgba(201,168,76,.15);color:var(--gold2)">${u.total} étudiant${u.total>1?'s':''}</span>
             <span class="badge badge-m">${u.masculins} G</span>
             <span class="badge badge-f">${u.feminins} F</span>
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px;">Prof. ${u.nom_prof}</div>
-          <div class="gender-bar-wrap" style="max-width:260px">
-            <div class="gender-bar-m" style="width:${pctM}%"></div>
-            <div class="gender-bar-f"></div>
-          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Prof. ${u.nom_prof}</div>
+          <div class="gender-bar-wrap" style="max-width:220px"><div class="gender-bar-m" style="width:${pctM}%"></div><div class="gender-bar-f"></div></div>
         </div>
         <span class="accordion-arrow" id="arrow-${u.id}">▶</span>
       </div>
@@ -844,361 +581,306 @@ function renderDashUnites(stats) {
   }).join('');
 }
 
-async function toggleAccordion(header, id) {
-  const body  = document.getElementById('body-'+id);
-  const arrow = document.getElementById('arrow-'+id);
-  const isOpen = body.classList.contains('open');
-  if (isOpen) { body.classList.remove('open'); arrow.classList.remove('open'); return; }
-  body.classList.add('open');
-  arrow.classList.add('open');
-  if (body.dataset.loaded) return;
-  body.dataset.loaded = '1';
-  body.innerHTML = '<div class="spinner" style="margin:20px auto;"></div>';
-  try {
-    const data = await api(`/unites/${id}/etudiants/`);
-    if (!data.etudiants.length) {
-      body.innerHTML='<div class="empty" style="padding:20px"><p>Aucun étudiant dans cette unité</p></div>';
-      return;
-    }
-    const rows = data.etudiants.map(e=>`
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.04);">
-        <div class="avatar ${e.genre==='M'?'av-m':'av-f'}">${initials(e.prenom,e.nom)}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:500;">${e.prenom} ${e.nom}</div>
-          <div style="font-size:11px;color:var(--muted);">${e.age} ans · ${e.ethnie||'—'}</div>
+async function toggleAcc(header,id){
+  const body=document.getElementById('body-'+id);
+  const arrow=document.getElementById('arrow-'+id);
+  if(body.classList.contains('open')){body.classList.remove('open');arrow.classList.remove('open');return}
+  body.classList.add('open');arrow.classList.add('open');
+  if(body.dataset.loaded) return;
+  body.dataset.loaded='1';
+  body.innerHTML='<div class="spinner" style="margin:16px auto"></div>';
+  try{
+    const data=await apiFetch(`/unites/${id}/etudiants/`);
+    if(!data.etudiants.length){body.innerHTML='<div class="empty" style="padding:16px"><p>Aucun étudiant dans cette unité</p></div>';return}
+    const rows=data.etudiants.map(e=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div class="avatar ${e.genre==='M'?'av-m':'av-f'}">${ini(e.prenom,e.nom)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500">${e.prenom} ${e.nom}</div>
+          <div style="font-size:11px;color:var(--muted)">${e.matricule} · ${e.age} ans</div>
         </div>
-        <span class="badge ${e.genre==='M'?'badge-m':'badge-f'}">${e.genre==='M'?'Garçon':'Fille'}</span>
+        <span class="badge ${e.genre==='M'?'badge-m':'badge-f'}">${e.genre==='M'?'G':'F'}</span>
       </div>`).join('');
-    body.innerHTML = rows + `<div style="padding:12px 20px;font-size:12px;color:var(--muted);">${data.total} étudiant(s) · ${data.masculins} garçons · ${data.feminins} filles</div>`;
-  } catch { body.innerHTML='<p style="padding:20px;color:var(--danger);">Erreur</p>'; }
+    body.innerHTML=rows+`<div style="padding:10px 18px;font-size:12px;color:var(--muted)">${data.total} étudiant(s) · ${data.masculins} garçons · ${data.feminins} filles</div>`;
+  }catch{body.innerHTML='<p style="padding:16px;color:var(--danger)">Erreur</p>'}
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════
    ÉTUDIANTS
-═══════════════════════════════════════════════════ */
-let etudiantsList = [];
+══════════════════════════════ */
+let etudiantsList=[];
 
-async function loadEtudiants() {
+async function loadEtudiants(){
   document.getElementById('et-loading').style.display='block';
   document.getElementById('et-empty').style.display='none';
   document.getElementById('tbody-etudiants').innerHTML='';
-  try {
-    const data = await api('/etudiants/?ordering=nom&page_size=200');
-    etudiantsList = data.results || data;
-    await loadUnitesForFilter();
+  try{
+    const data=await apiFetch('/etudiants/?ordering=nom&page_size=500');
+    etudiantsList=data.results||data;
+    await loadUnitesFilter();
     renderEtudiants(etudiantsList);
-  } catch { toast('Erreur de chargement des étudiants','err'); }
-  finally { document.getElementById('et-loading').style.display='none'; }
+  }catch{toast('Erreur de chargement des étudiants','err')}
+  finally{document.getElementById('et-loading').style.display='none'}
 }
 
-async function loadUnitesForFilter() {
-  try {
-    const data = await api('/unites/');
-    allUnites = data.results || data;
-    const sel1 = document.getElementById('filter-unite');
-    const sel2 = document.getElementById('et-unite');
-    const opts = allUnites.map(u=>`<option value="${u.id}">${u.nom_unite}</option>`).join('');
-    sel1.innerHTML='<option value="">Toutes les unités</option>'+opts;
-    sel2.innerHTML='<option value="">— Choisir une unité —</option>'+opts;
-  } catch {}
+async function loadUnitesFilter(){
+  try{
+    const data=await apiFetch('/unites/');
+    allUnites=data.results||data;
+    const opts=allUnites.map(u=>`<option value="${u.id}">${u.nom_unite}</option>`).join('');
+    document.getElementById('filter-unite').innerHTML='<option value="">Toutes unités</option>'+opts;
+  }catch{}
 }
 
-function renderEtudiants(list) {
-  const tbody = document.getElementById('tbody-etudiants');
-  document.getElementById('et-empty').style.display = list.length ? 'none':'block';
-  tbody.innerHTML = list.map(e=>`
-    <tr>
-      <td><div class="avatar ${e.genre==='M'?'av-m':'av-f'}">${initials(e.prenom,e.nom)}</div></td>
+function renderEtudiants(list){
+  const tbody=document.getElementById('tbody-etudiants');
+  document.getElementById('et-empty').style.display=list.length?'none':'block';
+  tbody.innerHTML=list.map(e=>{
+    const unitesHTML=(e.unites_detail||[]).map(u=>`<span class="badge badge-unit" style="margin:1px">${u.nom_unite}</span>`).join(' ')||'—';
+    return`<tr>
+      <td><div class="avatar ${e.genre==='M'?'av-m':'av-f'}">${ini(e.prenom,e.nom)}</div></td>
+      <td style="font-family:monospace;font-size:12px">${e.matricule}</td>
       <td><strong>${e.nom} ${e.prenom}</strong></td>
-      <td>${e.age} ans</td>
+      <td>${e.age}</td>
       <td><span class="badge ${e.genre==='M'?'badge-m':'badge-f'}">${e.genre==='M'?'Garçon':'Fille'}</span></td>
-      <td>${e.ethnie||'—'}</td>
-      <td><span class="badge badge-unit" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.unite_detail?.nom_unite||'—'}</span></td>
-      <td style="color:var(--muted);font-size:12px;">${fmt(e.date_inscription)}</td>
-      <td>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-ghost btn-sm" onclick="editEtudiant(${e.id})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteEtudiant(${e.id},'${e.nom} ${e.prenom}')">🗑</button>
-        </div>
-      </td>
-    </tr>`).join('');
+      <td><div style="display:flex;flex-wrap:wrap;gap:3px">${unitesHTML}</div></td>
+      <td style="color:var(--muted);font-size:12px;white-space:nowrap">${fmt(e.date_inscription)}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn btn-ghost btn-sm" onclick="editEtudiant(${e.id})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="delEtudiant(${e.id},'${e.nom} ${e.prenom}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
 }
 
-function filterEtudiants(q) {
-  const g = document.getElementById('filter-genre').value;
-  const u = document.getElementById('filter-unite').value;
-  let list = etudiantsList;
-  if (q) list = list.filter(e=>`${e.nom} ${e.prenom} ${e.ethnie} ${e.unite_detail?.nom_unite||''}`.toLowerCase().includes(q.toLowerCase()));
-  if (g) list = list.filter(e=>e.genre===g);
-  if (u) list = list.filter(e=>String(e.unite)===u);
+function filterEtudiants(q){
+  const g=document.getElementById('filter-genre').value;
+  const u=document.getElementById('filter-unite').value;
+  let list=etudiantsList;
+  if(q) list=list.filter(e=>`${e.matricule} ${e.nom} ${e.prenom} ${(e.unites_detail||[]).map(x=>x.nom_unite).join(' ')}`.toLowerCase().includes(q.toLowerCase()));
+  if(g) list=list.filter(e=>e.genre===g);
+  if(u) list=list.filter(e=>(e.unites||[]).map(String).includes(u));
   renderEtudiants(list);
 }
 
-function openModalEtudiant(data=null) {
-  document.getElementById('modal-et-title').textContent = data ? 'Modifier l\'étudiant' : 'Nouvel étudiant';
-  document.getElementById('et-id').value       = data?.id||'';
-  document.getElementById('et-nom').value      = data?.nom||'';
-  document.getElementById('et-prenom').value   = data?.prenom||'';
-  document.getElementById('et-dob').value      = data?.date_naissance||'';
-  document.getElementById('et-age').value      = data?.age||'';
-  document.getElementById('et-lieu').value     = data?.lieu_naissance||'';
-  document.getElementById('et-genre').value    = data?.genre||'M';
-  document.getElementById('et-ethnie').value   = data?.ethnie||'';
-  document.getElementById('et-unite').value    = data?.unite||'';
-  loadUnitesForFilter();
+async function openModalEtudiant(data=null){
+  document.getElementById('modal-et-title').textContent=data?'Modifier l\'étudiant':'Nouvel étudiant';
+  document.getElementById('et-id').value=data?.id||'';
+  document.getElementById('et-matricule').value=data?.matricule||'';
+  document.getElementById('et-nom').value=data?.nom||'';
+  document.getElementById('et-prenom').value=data?.prenom||'';
+  document.getElementById('et-dob').value=data?.date_naissance||'';
+  document.getElementById('et-age').value=data?.age||'';
+  document.getElementById('et-lieu').value=data?.lieu_naissance||'';
+  document.getElementById('et-genre').value=data?.genre||'M';
+  document.getElementById('et-ethnie').value=data?.ethnie||'';
+  // Charger unités pour multi-select
+  const unData=await apiFetch('/unites/').catch(()=>({results:[]}));
+  const unis=unData.results||unData;
+  const selected=(data?.unites||[]).map(Number);
+  buildMsDropdown(unis,selected);
   document.getElementById('modal-etudiant').style.display='flex';
 }
 
-async function editEtudiant(id) {
-  try {
-    const e = await api('/etudiants/'+id+'/');
-    openModalEtudiant(e);
-  } catch { toast('Erreur de chargement','err'); }
+async function editEtudiant(id){
+  try{const e=await apiFetch('/etudiants/'+id+'/');openModalEtudiant(e)}
+  catch{toast('Erreur de chargement','err')}
 }
 
-async function saveEtudiant() {
-  const id     = document.getElementById('et-id').value;
-  const body   = {
-    nom            : document.getElementById('et-nom').value.trim(),
-    prenom         : document.getElementById('et-prenom').value.trim(),
-    date_naissance : document.getElementById('et-dob').value,
-    age            : parseInt(document.getElementById('et-age').value),
-    lieu_naissance : document.getElementById('et-lieu').value.trim(),
-    genre          : document.getElementById('et-genre').value,
-    ethnie         : document.getElementById('et-ethnie').value.trim(),
-    unite          : document.getElementById('et-unite').value||null,
+async function saveEtudiant(){
+  const id=document.getElementById('et-id').value;
+  const body={
+    matricule     :document.getElementById('et-matricule').value.trim(),
+    nom           :document.getElementById('et-nom').value.trim(),
+    prenom        :document.getElementById('et-prenom').value.trim(),
+    date_naissance:document.getElementById('et-dob').value,
+    age           :parseInt(document.getElementById('et-age').value),
+    lieu_naissance:document.getElementById('et-lieu').value.trim(),
+    genre         :document.getElementById('et-genre').value,
+    ethnie        :document.getElementById('et-ethnie').value.trim(),
+    unites        :msSelected,
   };
-  if (!body.nom||!body.prenom||!body.date_naissance||!body.lieu_naissance||!body.age) {
-    toast('Veuillez remplir tous les champs obligatoires (*)','err'); return;
+  if(!body.matricule||!body.nom||!body.prenom||!body.date_naissance||!body.lieu_naissance||!body.age){
+    toast('Remplissez tous les champs obligatoires (*)','err');return;
   }
-  const btn = document.getElementById('btn-save-et');
-  btn.disabled=true; btn.textContent='Enregistrement…';
-  try {
-    if (id) await api('/etudiants/'+id+'/', 'PUT', body);
-    else     await api('/etudiants/',      'POST', body);
-    toast(id ? 'Étudiant mis à jour' : 'Étudiant enregistré avec succès');
+  const btn=document.getElementById('btn-save-et');
+  btn.disabled=true;btn.textContent='Enregistrement…';
+  try{
+    if(id) await apiFetch('/etudiants/'+id+'/','PUT',body);
+    else    await apiFetch('/etudiants/','POST',body);
+    toast(id?'Étudiant mis à jour':'Étudiant enregistré !');
     closeModal('modal-etudiant');
     loadEtudiants();
-    // Rafraîchir le dashboard si ouvert
-    if (document.getElementById('page-dashboard').style.display!=='none') loadDashboard();
-  } catch(e) {
-    toast('Erreur : '+e.message,'err');
-  } finally { btn.disabled=false; btn.textContent='Enregistrer'; }
+    if(document.getElementById('page-dashboard').style.display!=='none') loadDashboard();
+  }catch(e){toast('Erreur : '+e.message,'err')}
+  finally{btn.disabled=false;btn.textContent='Enregistrer'}
 }
 
-async function deleteEtudiant(id, nom) {
-  if (!confirm(`Supprimer ${nom} ?`)) return;
-  try {
-    await api('/etudiants/'+id+'/', 'DELETE');
+async function delEtudiant(id,nom){
+  if(!confirm(`Supprimer ${nom} ?`)) return;
+  try{
+    await apiFetch('/etudiants/'+id+'/','DELETE');
     toast(`${nom} supprimé`);
     loadEtudiants();
-    if (document.getElementById('page-dashboard').style.display!=='none') loadDashboard();
-  } catch { toast('Erreur lors de la suppression','err'); }
+    if(document.getElementById('page-dashboard').style.display!=='none') loadDashboard();
+  }catch{toast('Erreur suppression','err')}
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════
    UNITÉS
-═══════════════════════════════════════════════════ */
-async function loadUnites() {
-  const grid = document.getElementById('unites-grid');
-  grid.innerHTML='<div class="spinner" style="grid-column:1/-1;"></div>';
-  try {
-    const data = await api('/unites/');
-    allUnites = data.results||data;
-    if (!allUnites.length) {
-      grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div><p>Aucune unité créée</p></div>'; return;
-    }
-    grid.innerHTML = allUnites.map(u=>{
-      const pctM = u.nb_etudiants ? Math.round(u.nb_masculins/u.nb_etudiants*100) : 0;
-      return `
-      <div class="card">
+══════════════════════════════ */
+async function loadUnites(){
+  const grid=document.getElementById('unites-grid');
+  grid.innerHTML='<div class="spinner" style="grid-column:1/-1"></div>';
+  try{
+    const data=await apiFetch('/unites/');
+    allUnites=data.results||data;
+    if(!allUnites.length){grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div><p>Aucune unité</p></div>';return}
+    grid.innerHTML=allUnites.map(u=>{
+      const pctM=u.nb_etudiants?Math.round(u.nb_masculins/u.nb_etudiants*100):0;
+      return`<div class="card">
         <div class="card-header">
-          <div>
-            <div class="card-title">${u.nom_unite}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Prof. ${u.nom_prof}</div>
-          </div>
-          <div style="display:flex;gap:6px;">
+          <div><div class="card-title">${u.nom_unite}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Prof. ${u.nom_prof}</div></div>
+          <div style="display:flex;gap:6px">
             <button class="btn btn-ghost btn-sm" onclick="editUnite(${u.id})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteUnite(${u.id},'${u.nom_unite}')">🗑</button>
+            <button class="btn btn-danger btn-sm" onclick="delUnite(${u.id},'${u.nom_unite.replace(/'/g,"\\'")}')">🗑</button>
           </div>
         </div>
         <div class="card-body">
-          ${u.description?`<p style="font-size:13px;color:var(--muted);margin-bottom:14px;">${u.description}</p>`:''}
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
-            <span class="badge badge-unit">${u.nb_etudiants} étudiant${u.nb_etudiants!==1?'s':''}</span>
+          ${u.description?`<p style="font-size:12px;color:var(--muted);margin-bottom:12px">${u.description}</p>`:''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <span class="badge" style="background:rgba(201,168,76,.15);color:var(--gold2)">${u.nb_etudiants} étudiant${u.nb_etudiants!==1?'s':''}</span>
             <span class="badge badge-m">${u.nb_masculins} garçons</span>
             <span class="badge badge-f">${u.nb_feminins} filles</span>
           </div>
-          <div class="gender-bar-wrap">
-            <div class="gender-bar-m" style="width:${pctM}%"></div>
-            <div class="gender-bar-f"></div>
-          </div>
-          <div style="margin-top:12px;">
-            <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="showUniteDetail(${u.id},'${u.nom_unite}')">
-              Voir les étudiants →
-            </button>
+          <div class="gender-bar-wrap"><div class="gender-bar-m" style="width:${pctM}%"></div><div class="gender-bar-f"></div></div>
+          <div style="margin-top:10px">
+            <button class="btn btn-ghost btn-sm" style="width:100%" onclick="showUniteDetail(${u.id},'${u.nom_unite.replace(/'/g,"\\'")}')">Voir les étudiants →</button>
           </div>
         </div>
       </div>`;
     }).join('');
-  } catch { grid.innerHTML='<p style="color:var(--danger);">Erreur de chargement</p>'; }
+  }catch(e){grid.innerHTML=`<p style="color:var(--danger);padding:20px">⚠ ${e.message}</p>`}
 }
 
-function openModalUnite(data=null) {
-  document.getElementById('modal-un-title').textContent = data ? 'Modifier l\'unité':'Nouvelle unité';
-  document.getElementById('un-id').value   = data?.id||'';
-  document.getElementById('un-nom').value  = data?.nom_unite||'';
-  document.getElementById('un-prof').value = data?.nom_prof||'';
-  document.getElementById('un-desc').value = data?.description||'';
+function openModalUnite(data=null){
+  document.getElementById('modal-un-title').textContent=data?"Modifier l'unité":"Nouvelle unité";
+  document.getElementById('un-id').value=data?.id||'';
+  document.getElementById('un-nom').value=data?.nom_unite||'';
+  document.getElementById('un-prof').value=data?.nom_prof||'';
+  document.getElementById('un-desc').value=data?.description||'';
   document.getElementById('modal-unite').style.display='flex';
 }
 
-async function editUnite(id) {
-  try { const u=await api('/unites/'+id+'/'); openModalUnite(u); }
-  catch { toast('Erreur','err'); }
+async function editUnite(id){
+  try{const u=await apiFetch('/unites/'+id+'/');openModalUnite(u)}
+  catch{toast('Erreur','err')}
 }
 
-async function saveUnite() {
-  const id   = document.getElementById('un-id').value;
-  const body = {
-    nom_unite  : document.getElementById('un-nom').value.trim(),
-    nom_prof   : document.getElementById('un-prof').value.trim(),
-    description: document.getElementById('un-desc').value.trim(),
-  };
-  if (!body.nom_unite||!body.nom_prof) { toast('Nom et professeur obligatoires','err'); return; }
-  try {
-    if (id) await api('/unites/'+id+'/', 'PUT', body);
-    else     await api('/unites/',       'POST', body);
-    toast(id ? 'Unité mise à jour' : 'Unité créée');
-    closeModal('modal-unite');
-    loadUnites();
-  } catch(e) { toast('Erreur : '+e.message,'err'); }
+async function saveUnite(){
+  const id=document.getElementById('un-id').value;
+  const body={nom_unite:document.getElementById('un-nom').value.trim(),nom_prof:document.getElementById('un-prof').value.trim(),description:document.getElementById('un-desc').value.trim()};
+  if(!body.nom_unite||!body.nom_prof){toast('Nom et professeur obligatoires','err');return}
+  try{
+    if(id) await apiFetch('/unites/'+id+'/','PUT',body);
+    else    await apiFetch('/unites/','POST',body);
+    toast(id?'Unité mise à jour':'Unité créée !');
+    closeModal('modal-unite');loadUnites();
+  }catch(e){toast('Erreur : '+e.message,'err')}
 }
 
-async function deleteUnite(id, nom) {
-  if (!confirm(`Supprimer l'unité "${nom}" ?\nLes étudiants rattachés seront détachés.`)) return;
-  try {
-    await api('/unites/'+id+'/', 'DELETE');
-    toast(`Unité "${nom}" supprimée`);
-    loadUnites();
-  } catch { toast('Erreur lors de la suppression','err'); }
+async function delUnite(id,nom){
+  if(!confirm(`Supprimer "${nom}" ?`)) return;
+  try{
+    await apiFetch('/unites/'+id+'/','DELETE');
+    toast(`"${nom}" supprimée`);loadUnites();
+  }catch{toast('Erreur suppression','err')}
 }
 
-async function showUniteDetail(id, nom) {
-  document.getElementById('ud-title').textContent = nom;
+async function showUniteDetail(id,nom){
+  document.getElementById('ud-title').textContent=nom;
   document.getElementById('ud-body').innerHTML='<div class="spinner"></div>';
   document.getElementById('modal-unite-detail').style.display='flex';
-  try {
-    const data = await api(`/unites/${id}/etudiants/`);
-    if (!data.etudiants.length) {
-      document.getElementById('ud-body').innerHTML='<div class="empty"><div class="empty-icon">🎓</div><p>Aucun étudiant inscrit</p></div>'; return;
-    }
-    const byGenre = { M: data.etudiants.filter(e=>e.genre==='M'), F: data.etudiants.filter(e=>e.genre==='F') };
-    let html=`<div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
-      <span class="badge badge-unit">${data.total} total</span>
+  try{
+    const data=await apiFetch(`/unites/${id}/etudiants/`);
+    if(!data.etudiants.length){document.getElementById('ud-body').innerHTML='<div class="empty"><div class="empty-icon">🎓</div><p>Aucun étudiant inscrit</p></div>';return}
+    const byG={M:data.etudiants.filter(e=>e.genre==='M'),F:data.etudiants.filter(e=>e.genre==='F')};
+    let html=`<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <span class="badge" style="background:rgba(201,168,76,.15);color:var(--gold2)">${data.total} total</span>
       <span class="badge badge-m">${data.masculins} garçons</span>
       <span class="badge badge-f">${data.feminins} filles</span>
     </div>`;
     ['M','F'].forEach(g=>{
-      if (!byGenre[g].length) return;
-      html+=`<p style="font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px;">${g==='M'?'Garçons':'Filles'}</p>`;
-      html+=byGenre[g].map(e=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);">
-          <div class="avatar ${g==='M'?'av-m':'av-f'}">${initials(e.prenom,e.nom)}</div>
+      if(!byG[g].length) return;
+      html+=`<p style="font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:6px">${g==='M'?'Garçons':'Filles'}</p>`;
+      html+=byG[g].map(e=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <div class="avatar ${g==='M'?'av-m':'av-f'}">${ini(e.prenom,e.nom)}</div>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:500;">${e.prenom} ${e.nom}</div>
-            <div style="font-size:11px;color:var(--muted)">${e.age} ans · ${e.lieu_naissance} · ${e.ethnie||'—'}</div>
+            <div style="font-size:13px;font-weight:500">${e.prenom} ${e.nom}</div>
+            <div style="font-size:11px;color:var(--muted)">${e.matricule} · ${e.age} ans · ${e.lieu_naissance}</div>
           </div>
         </div>`).join('');
-      html+='<div style="margin-bottom:14px;"></div>';
+      html+='<div style="margin-bottom:12px"></div>';
     });
     document.getElementById('ud-body').innerHTML=html;
-  } catch { document.getElementById('ud-body').innerHTML='<p style="color:var(--danger);">Erreur</p>'; }
+  }catch{document.getElementById('ud-body').innerHTML='<p style="color:var(--danger)">Erreur</p>'}
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════
    GRAPHIQUE
-═══════════════════════════════════════════════════ */
-let chartInstance = null;
-
-async function loadGraphique() {
+══════════════════════════════ */
+let chartInst=null;
+async function loadGraphique(){
   document.getElementById('graph-details').innerHTML='<div class="spinner"></div>';
-  try {
-    const stats = await api('/unites/statistiques-genre/');
-    renderChart(stats);
-    renderGraphDetails(stats);
-  } catch { toast('Erreur chargement graphique','err'); }
+  try{
+    const stats=await apiFetch('/unites/statistiques-genre/');
+    buildChart(stats);buildGraphDetails(stats);
+  }catch(e){toast('Erreur graphique : '+e.message,'err')}
 }
 
-function renderChart(stats) {
-  const ctx = document.getElementById('genreChart').getContext('2d');
-  if (chartInstance) { chartInstance.destroy(); chartInstance=null; }
-  chartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: stats.map(u=>u.nom_unite.length>14?u.nom_unite.substring(0,14)+'…':u.nom_unite),
-      datasets: [
-        {
-          label: 'Garçons',
-          data: stats.map(u=>u.masculins),
-          backgroundColor: 'rgba(61,186,122,.75)',
-          borderRadius: 6,
-          borderSkipped: false,
-        },
-        {
-          label: 'Filles',
-          data: stats.map(u=>u.feminins),
-          backgroundColor: 'rgba(224,132,82,.75)',
-          borderRadius: 6,
-          borderSkipped: false,
-        }
+function buildChart(stats){
+  const ctx=document.getElementById('genreChart').getContext('2d');
+  if(chartInst){chartInst.destroy();chartInst=null}
+  chartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:stats.map(u=>u.nom_unite.length>12?u.nom_unite.substring(0,12)+'…':u.nom_unite),
+      datasets:[
+        {label:'Garçons',data:stats.map(u=>u.masculins),backgroundColor:'rgba(61,186,122,.75)',borderRadius:5,borderSkipped:false},
+        {label:'Filles', data:stats.map(u=>u.feminins), backgroundColor:'rgba(224,132,82,.75)', borderRadius:5,borderSkipped:false}
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: {
-          grid: { color: 'rgba(255,255,255,.04)' },
-          ticks: { color: '#8a9ab5', font: { family:'Outfit', size:11 } }
-        },
-        y: {
-          beginAtZero: true,
-          grid: { color: 'rgba(255,255,255,.06)' },
-          ticks: { color: '#8a9ab5', font: { family:'Outfit', size:11 }, stepSize: 1 }
-        }
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8a9ab5',font:{family:'Outfit',size:11}}},
+        y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#8a9ab5',font:{family:'Outfit',size:11},stepSize:1}}
       }
     }
   });
 }
 
-function renderGraphDetails(stats) {
-  const el = document.getElementById('graph-details');
-  if (!stats.length) { el.innerHTML='<div class="empty"><p>Aucune donnée</p></div>'; return; }
-  el.innerHTML = stats.map(u=>{
-    const pctM = u.total ? Math.round(u.masculins/u.total*100):0;
-    return `
-    <div style="margin-bottom:18px;">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-        <span style="font-size:13px;font-weight:500;">${u.nom_unite}</span>
-        <span style="font-size:11px;color:var(--muted);">${u.total} étudiant${u.total>1?'s':''}</span>
+function buildGraphDetails(stats){
+  const el=document.getElementById('graph-details');
+  if(!stats.length){el.innerHTML='<div class="empty"><p>Aucune donnée</p></div>';return}
+  el.innerHTML=stats.map(u=>{
+    const pctM=u.total?Math.round(u.masculins/u.total*100):0;
+    return`<div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:500">${u.nom_unite}</span>
+        <span style="font-size:11px;color:var(--muted)">${u.total}</span>
       </div>
-      <div class="gender-bar-wrap">
-        <div class="gender-bar-m" style="width:${pctM}%"></div>
-        <div class="gender-bar-f"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--muted);">
-        <span>♂ ${u.masculins} (${pctM}%)</span>
-        <span>♀ ${u.feminins} (${100-pctM}%)</span>
+      <div class="gender-bar-wrap"><div class="gender-bar-m" style="width:${pctM}%"></div><div class="gender-bar-f"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:3px;font-size:11px;color:var(--muted)">
+        <span>♂ ${u.masculins} (${pctM}%)</span><span>♀ ${u.feminins} (${100-pctM}%)</span>
       </div>
     </div>`;
   }).join('');
 }
 
-/* ═══════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════ */
+/* ── INIT ── */
 checkStatus();
 loadDashboard();
 </script>
