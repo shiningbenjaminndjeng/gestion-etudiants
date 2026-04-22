@@ -1,16 +1,11 @@
 # etudiants/migrations/0001_initial.py
-# Migration complète incluant TOUS les champs (genre inclus)
-# Supprimez tous les anciens fichiers de migration et utilisez SEULEMENT celui-ci
-
 import django.db.models.deletion
-import django.utils.timezone
 from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     initial = True
-
     dependencies = []
 
     operations = [
@@ -22,15 +17,13 @@ class Migration(migrations.Migration):
                 ('nom_prof', models.CharField(max_length=150)),
                 ('description', models.TextField(blank=True, null=True)),
             ],
-            options={
-                'verbose_name': "Unité d'enseignement",
-                'ordering': ['nom_unite'],
-            },
+            options={'verbose_name': "Unité d'enseignement", 'ordering': ['nom_unite']},
         ),
         migrations.CreateModel(
             name='Etudiant',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('matricule', models.CharField(max_length=20, unique=True, verbose_name='Matricule')),
                 ('nom', models.CharField(max_length=100)),
                 ('prenom', models.CharField(max_length=100)),
                 ('date_naissance', models.DateField()),
@@ -39,21 +32,16 @@ class Migration(migrations.Migration):
                 ('ethnie', models.CharField(blank=True, max_length=100)),
                 ('genre', models.CharField(
                     choices=[('M', 'Masculin'), ('F', 'Féminin')],
-                    default='M',
-                    max_length=1,
-                    verbose_name='Genre',
+                    default='M', max_length=1, verbose_name='Genre',
                 )),
-                ('unite', models.ForeignKey(
-                    null=True,
-                    on_delete=django.db.models.deletion.SET_NULL,
+                ('unites', models.ManyToManyField(
+                    blank=True,
                     related_name='etudiants',
                     to='etudiants.uniteenseignement',
+                    verbose_name="Unités d'enseignement",
                 )),
                 ('date_inscription', models.DateTimeField(auto_now_add=True)),
             ],
-            options={
-                'verbose_name': 'Étudiant',
-                'ordering': ['nom', 'prenom'],
-            },
+            options={'verbose_name': 'Étudiant', 'ordering': ['nom', 'prenom']},
         ),
     ]
