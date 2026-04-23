@@ -3,27 +3,28 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GestEtu — Gestion des Étudiants</title>
+<title>GestÉtu — Gestion des Étudiants</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <style>
-/* ─── RESET & VARS ───────────────────────────────────── */
+/* ─── RESET & VARS ───────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --navy:   #0f1b2d;
-  --navy2:  #162236;
-  --navy3:  #1e3352;
-  --gold:   #c9a84c;
-  --gold2:  #e8c76a;
-  --white:  #f5f3ee;
-  --muted:  #8a9ab5;
-  --danger: #e05252;
-  --success:#3dba7a;
-  --radius: 12px;
-  --font:   'Outfit', sans-serif;
+  --navy:    #0f1b2d;
+  --navy2:   #162236;
+  --navy3:   #1e3352;
+  --gold:    #c9a84c;
+  --gold2:   #e8c76a;
+  --white:   #f5f3ee;
+  --muted:   #8a9ab5;
+  --danger:  #e05252;
+  --success: #3dba7a;
+  --radius:  12px;
+  --font:    'Outfit', sans-serif;
+  --sidebar-w: 240px;
 }
 
 body {
@@ -35,10 +36,51 @@ body {
   overflow: hidden;
 }
 
-/* ─── SIDEBAR ────────────────────────────────────────── */
+/* ─── OVERLAY MOBILE ─────────────────────────────────────── */
+#overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 9;
+  backdrop-filter: blur(2px);
+}
+#overlay.show { display: block; }
+
+/* ─── TOP BAR (mobile only) ──────────────────────────────── */
+#topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--navy2);
+  border-bottom: 1px solid rgba(201,168,76,.15);
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  z-index: 8;
+}
+.hamburger {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.hamburger:hover { background: rgba(255,255,255,.08); }
+.topbar-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: var(--gold2);
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────────────── */
 #sidebar {
-  width: 240px;
-  min-width: 240px;
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
   background: var(--navy2);
   border-right: 1px solid rgba(201,168,76,.15);
   display: flex;
@@ -46,6 +88,7 @@ body {
   height: 100vh;
   position: fixed;
   z-index: 10;
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
 }
 
 .logo {
@@ -66,7 +109,7 @@ body {
   letter-spacing: 1.5px;
 }
 
-nav { padding: 16px 12px; flex: 1; }
+nav { padding: 16px 12px; flex: 1; overflow-y: auto; }
 .nav-label {
   font-size: 10px;
   text-transform: uppercase;
@@ -119,16 +162,16 @@ nav { padding: 16px 12px; flex: 1; }
 .dot.ok  { background: var(--success); }
 .dot.err { background: var(--danger); }
 
-/* ─── MAIN ───────────────────────────────────────────── */
+/* ─── MAIN ────────────────────────────────────────────────── */
 #main {
-  margin-left: 240px;
+  margin-left: var(--sidebar-w);
   flex: 1;
   height: 100vh;
   overflow-y: auto;
   padding: 32px 36px;
 }
 
-/* ─── PAGE HEADER ────────────────────────────────────── */
+/* ─── PAGE HEADER ─────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -140,7 +183,7 @@ nav { padding: 16px 12px; flex: 1; }
 .page-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--white); }
 .page-sub   { font-size: 13px; color: var(--muted); margin-top: 3px; }
 
-/* ─── BUTTON ─────────────────────────────────────────── */
+/* ─── BUTTON ──────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -154,10 +197,7 @@ nav { padding: 16px 12px; flex: 1; }
   transition: all .15s;
   border: none;
 }
-.btn-primary {
-  background: var(--gold);
-  color: var(--navy);
-}
+.btn-primary { background: var(--gold); color: var(--navy); }
 .btn-primary:hover { background: var(--gold2); transform: translateY(-1px); }
 .btn-ghost {
   background: rgba(255,255,255,.06);
@@ -173,18 +213,18 @@ nav { padding: 16px 12px; flex: 1; }
 .btn-danger:hover { background: rgba(224,82,82,.25); }
 .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-/* ─── STATS CARDS ────────────────────────────────────── */
+/* ─── STATS CARDS ─────────────────────────────────────────── */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
   margin-bottom: 28px;
 }
 .stat-card {
   background: var(--navy2);
   border: 1px solid rgba(201,168,76,.15);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 18px 16px;
   position: relative;
   overflow: hidden;
 }
@@ -198,11 +238,11 @@ nav { padding: 16px 12px; flex: 1; }
   transition: opacity .2s;
 }
 .stat-card:hover::before { opacity: 1; }
-.stat-label  { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
-.stat-value  { font-size: 32px; font-weight: 700; color: var(--white); margin-top: 6px; line-height: 1; }
-.stat-icon   { position: absolute; right: 16px; top: 16px; font-size: 22px; opacity: .25; }
+.stat-label  { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+.stat-value  { font-size: 30px; font-weight: 700; color: var(--white); margin-top: 6px; line-height: 1; }
+.stat-icon   { position: absolute; right: 14px; top: 14px; font-size: 20px; opacity: .2; }
 
-/* ─── CARD ───────────────────────────────────────────── */
+/* ─── CARD ────────────────────────────────────────────────── */
 .card {
   background: var(--navy2);
   border: 1px solid rgba(201,168,76,.12);
@@ -210,7 +250,7 @@ nav { padding: 16px 12px; flex: 1; }
   overflow: hidden;
 }
 .card-header {
-  padding: 18px 22px;
+  padding: 16px 20px;
   border-bottom: 1px solid rgba(255,255,255,.06);
   display: flex;
   align-items: center;
@@ -219,15 +259,15 @@ nav { padding: 16px 12px; flex: 1; }
   flex-wrap: wrap;
 }
 .card-title { font-size: 15px; font-weight: 600; color: var(--white); }
-.card-body  { padding: 22px; }
+.card-body  { padding: 20px; }
 
-/* ─── TABLE ──────────────────────────────────────────── */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+/* ─── TABLE ───────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
 thead th {
   text-align: left;
-  padding: 12px 14px;
-  font-size: 11px;
+  padding: 11px 12px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1.2px;
   color: var(--muted);
@@ -235,7 +275,7 @@ thead th {
   white-space: nowrap;
 }
 tbody td {
-  padding: 13px 14px;
+  padding: 11px 12px;
   border-bottom: 1px solid rgba(255,255,255,.04);
   color: var(--white);
   vertical-align: middle;
@@ -243,20 +283,34 @@ tbody td {
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: rgba(255,255,255,.025); }
 
-/* ─── BADGE ──────────────────────────────────────────── */
+/* ─── BADGE ───────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
+  padding: 3px 9px;
   border-radius: 99px;
   font-size: 11px;
   font-weight: 500;
+  white-space: nowrap;
 }
-.badge-m { background: rgba(61,186,122,.15); color: #3dba7a; }
-.badge-f { background: rgba(224,132,82,.15); color: #e08452; }
-.badge-unit { background: rgba(201,168,76,.15); color: var(--gold2); }
+.badge-m    { background: rgba(61,186,122,.15); color: #3dba7a; }
+.badge-f    { background: rgba(224,132,82,.15);  color: #e08452; }
+.badge-unit { background: rgba(201,168,76,.15);  color: var(--gold2); }
 
-/* ─── SEARCH BAR ─────────────────────────────────────── */
+/* ─── UNITÉS MULTI-BADGE ──────────────────────────────────── */
+.unites-badges { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.badge-more {
+  background: rgba(255,255,255,.08);
+  color: var(--muted);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  cursor: pointer;
+  border: none;
+  font-family: var(--font);
+}
+
+/* ─── SEARCH BAR ──────────────────────────────────────────── */
 .search-bar {
   display: flex;
   align-items: center;
@@ -265,7 +319,9 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 8px;
   padding: 8px 14px;
-  min-width: 200px;
+  min-width: 180px;
+  flex: 1;
+  max-width: 300px;
 }
 .search-bar input {
   background: none;
@@ -275,10 +331,74 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   font-family: var(--font);
   font-size: 13px;
   width: 100%;
+  min-width: 0;
 }
 .search-bar input::placeholder { color: var(--muted); }
 
-/* ─── MODAL ──────────────────────────────────────────── */
+/* ─── FILTERS ROW ─────────────────────────────────────────── */
+.filters-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+}
+.filter-select {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+.filter-select option { background: var(--navy2); }
+
+/* ─── CHECKBOX LIST (multi-select unités) ─────────────────── */
+.checkbox-list {
+  max-height: 190px;
+  overflow-y: auto;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  background: rgba(255,255,255,.03);
+  padding: 6px;
+}
+.checkbox-list::-webkit-scrollbar { width: 5px; }
+.checkbox-list::-webkit-scrollbar-track { background: transparent; }
+.checkbox-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 99px; }
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .12s;
+  user-select: none;
+}
+.checkbox-item:hover { background: rgba(255,255,255,.05); }
+.checkbox-item input[type=checkbox] {
+  accent-color: var(--gold);
+  width: 15px; height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.checkbox-label {
+  flex: 1;
+  min-width: 0;
+}
+.checkbox-label .cl-name { font-size: 13px; font-weight: 500; }
+.checkbox-label .cl-prof { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.checkbox-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ─── MODAL ───────────────────────────────────────────────── */
 .modal-bg {
   position: fixed;
   inset: 0;
@@ -288,7 +408,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   animation: fadein .15s ease;
 }
 @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
@@ -298,12 +418,18 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   border: 1px solid rgba(201,168,76,.2);
   border-radius: 16px;
   width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
+  max-width: 520px;
+  max-height: 92vh;
   overflow-y: auto;
   animation: slideup .2s ease;
+  -webkit-overflow-scrolling: touch;
 }
-@keyframes slideup { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+.modal::-webkit-scrollbar { width: 5px; }
+.modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 99px; }
+@keyframes slideup {
+  from { transform: translateY(20px); opacity: 0 }
+  to   { transform: translateY(0);    opacity: 1 }
+}
 
 .modal-header {
   padding: 20px 24px 16px;
@@ -311,18 +437,30 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--navy2);
+  z-index: 2;
 }
 .modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--gold2); }
 .modal-close {
   background: none; border: none; color: var(--muted);
   font-size: 20px; cursor: pointer; line-height: 1; padding: 4px;
+  border-radius: 6px;
 }
-.modal-close:hover { color: var(--white); }
+.modal-close:hover { color: var(--white); background: rgba(255,255,255,.06); }
 .modal-body { padding: 20px 24px 24px; }
 
-/* ─── FORM ───────────────────────────────────────────── */
-.form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+/* ─── FORM ────────────────────────────────────────────────── */
+.form-group { margin-bottom: 15px; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
 .form-control {
   width: 100%;
   background: rgba(255,255,255,.05);
@@ -337,104 +475,193 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
 }
 .form-control:focus { border-color: var(--gold); }
 .form-control option { background: var(--navy2); color: var(--white); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
 
-/* ─── ACCORDION (unite detail) ───────────────────────── */
+/* ─── ACCORDION ───────────────────────────────────────────── */
 .accordion-item {
   background: var(--navy2);
   border: 1px solid rgba(201,168,76,.12);
   border-radius: var(--radius);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   overflow: hidden;
 }
 .accordion-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 14px 18px;
   cursor: pointer;
   transition: background .15s;
+  gap: 12px;
 }
 .accordion-header:hover { background: rgba(255,255,255,.02); }
 .accordion-arrow {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--muted);
   transition: transform .2s;
+  flex-shrink: 0;
 }
 .accordion-arrow.open { transform: rotate(90deg); }
 .accordion-body { display: none; border-top: 1px solid rgba(255,255,255,.06); }
 .accordion-body.open { display: block; }
 
-/* ─── GENDER BAR ─────────────────────────────────────── */
-.gender-bar-wrap { display: flex; gap: 3px; height: 6px; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+/* ─── GENDER BAR ──────────────────────────────────────────── */
+.gender-bar-wrap {
+  display: flex; gap: 3px; height: 5px;
+  border-radius: 99px; overflow: hidden; margin-top: 6px;
+}
 .gender-bar-m { background: #3dba7a; border-radius: 99px 0 0 99px; transition: width .4s; }
 .gender-bar-f { background: #e08452; border-radius: 0 99px 99px 0; transition: width .4s; flex: 1; }
 
-/* ─── TOAST ──────────────────────────────────────────── */
+/* ─── TOAST ───────────────────────────────────────────────── */
 #toast {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
+  bottom: 20px;
+  right: 20px;
   z-index: 200;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-width: calc(100vw - 40px);
 }
 .toast-item {
   background: var(--navy3);
   border: 1px solid rgba(255,255,255,.1);
   border-radius: 10px;
-  padding: 12px 18px;
+  padding: 11px 16px;
   font-size: 13px;
   display: flex;
   align-items: center;
   gap: 10px;
   animation: slideup .2s ease;
-  min-width: 220px;
+  min-width: 200px;
+  max-width: 320px;
 }
 .toast-item.ok  { border-left: 3px solid var(--success); }
 .toast-item.err { border-left: 3px solid var(--danger); }
 
-/* ─── EMPTY STATE ────────────────────────────────────── */
-.empty { text-align: center; padding: 48px 20px; color: var(--muted); }
-.empty-icon { font-size: 36px; opacity: .4; margin-bottom: 12px; }
+/* ─── EMPTY ───────────────────────────────────────────────── */
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty-icon { font-size: 32px; opacity: .4; margin-bottom: 10px; }
 
-/* ─── LOADING ────────────────────────────────────────── */
+/* ─── SPINNER ─────────────────────────────────────────────── */
 .spinner {
-  width: 32px; height: 32px;
+  width: 28px; height: 28px;
   border: 3px solid rgba(201,168,76,.2);
   border-top-color: var(--gold);
   border-radius: 50%;
   animation: spin .7s linear infinite;
-  margin: 48px auto;
+  margin: 40px auto;
 }
 @keyframes spin { to { transform: rotate(360deg) } }
 
-/* ─── CHART CONTAINER ────────────────────────────────── */
-.chart-container { position: relative; height: 280px; }
+/* ─── CHART ───────────────────────────────────────────────── */
+.chart-container { position: relative; height: 260px; }
 
-/* ─── AVATAR ─────────────────────────────────────────── */
+/* ─── AVATAR ──────────────────────────────────────────────── */
 .avatar {
-  width: 34px; height: 34px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 600; flex-shrink: 0;
+  font-size: 11px; font-weight: 600; flex-shrink: 0;
 }
-.av-m { background: rgba(61,186,122,.2); color: #3dba7a; }
+.av-m { background: rgba(61,186,122,.2);  color: #3dba7a; }
 .av-f { background: rgba(224,132,82,.2); color: #e08452; }
 
-/* ─── RESPONSIVE ─────────────────────────────────────── */
+/* ─── MATRICULE CHIP ──────────────────────────────────────── */
+.chip-mat {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .5px;
+  font-family: monospace;
+}
+
+/* ─── UNITE CARDS GRID ────────────────────────────────────── */
+.unites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ─── GRAPH LAYOUT ────────────────────────────────────────── */
+.graph-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ─── SCROLLBAR GLOBAL ────────────────────────────────────── */
+#main::-webkit-scrollbar { width: 6px; }
+#main::-webkit-scrollbar-track { background: transparent; }
+#main::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 99px; }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE
+══════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  #sidebar { width: 200px; min-width: 200px; }
-  #main    { margin-left: 200px; padding: 20px 16px; }
+  #topbar { display: flex; }
+  #sidebar {
+    transform: translateX(-100%);
+  }
+  #sidebar.open { transform: translateX(0); }
+  #main {
+    margin-left: 0;
+    padding: 72px 14px 20px;
+    height: 100vh;
+  }
   .form-row { grid-template-columns: 1fr; }
+  .graph-layout { grid-template-columns: 1fr; }
+  .page-header { margin-bottom: 18px; }
+  .page-title { font-size: 22px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-value { font-size: 24px; }
+  .unites-grid { grid-template-columns: 1fr; }
+  .card-header { flex-direction: column; align-items: flex-start; }
+  .filters-row { flex-direction: column; }
+  .search-bar { max-width: 100%; }
+  .filter-select { width: 100%; }
+  .modal { max-width: 100%; border-radius: 16px 16px 0 0; }
+  .modal-bg { align-items: flex-end; padding: 0; }
+  .modal-footer { justify-content: stretch; }
+  .modal-footer .btn { flex: 1; justify-content: center; }
+  table { min-width: 520px; font-size: 12px; }
+  thead th, tbody td { padding: 9px 10px; }
+  #toast { bottom: 12px; right: 12px; left: 12px; }
+  .toast-item { max-width: 100%; min-width: 0; }
+}
+
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-card { padding: 14px 12px; }
+  .stat-value { font-size: 22px; }
 }
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════════
-     SIDEBAR
-═══════════════════════════════════════════════════════ -->
+<!-- OVERLAY mobile -->
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- TOP BAR mobile -->
+<div id="topbar">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+  <span class="topbar-title">GestÉtu</span>
+</div>
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
 <aside id="sidebar">
   <div class="logo">
     <div class="logo-title">GestÉtu</div>
@@ -443,17 +670,17 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
 
   <nav>
     <div class="nav-label">Navigation</div>
-    <button class="nav-item active" onclick="showPage('dashboard')">
+    <button class="nav-item active" onclick="navTo('dashboard')">
       <span class="nav-icon">📊</span> Tableau de bord
     </button>
-    <button class="nav-item" onclick="showPage('etudiants')">
+    <button class="nav-item" onclick="navTo('etudiants')">
       <span class="nav-icon">🎓</span> Étudiants
     </button>
-    <button class="nav-item" onclick="showPage('unites')">
-      <span class="nav-icon">📚</span> Unités d'enseignement
+    <button class="nav-item" onclick="navTo('unites')">
+      <span class="nav-icon">📚</span> Unités d'ens.
     </button>
     <div class="nav-label">Analyses</div>
-    <button class="nav-item" onclick="showPage('graphique')">
+    <button class="nav-item" onclick="navTo('graphique')">
       <span class="nav-icon">📈</span> Graphique genre
     </button>
   </nav>
@@ -467,9 +694,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   </div>
 </aside>
 
-<!-- ════════════════════════════════════════════════════
-     MAIN
-═══════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════ MAIN ═══════════════════════════════ -->
 <main id="main">
 
   <!-- ── DASHBOARD ── -->
@@ -479,25 +704,22 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
         <div class="page-title">Tableau de bord</div>
         <div class="page-sub">Vue d'ensemble en temps réel</div>
       </div>
-      <button class="btn btn-ghost" onclick="loadDashboard()">↻ Actualiser</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadDashboard()">↻ Actualiser</button>
     </div>
 
-    <div class="stats-grid" id="dash-stats">
+    <div class="stats-grid">
       <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-label">Unités</div><div class="stat-value" id="s-unites">—</div></div>
       <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-label">Étudiants</div><div class="stat-value" id="s-total">—</div></div>
       <div class="stat-card"><div class="stat-icon">♂</div><div class="stat-label">Garçons</div><div class="stat-value" id="s-m">—</div></div>
       <div class="stat-card"><div class="stat-icon">♀</div><div class="stat-label">Filles</div><div class="stat-value" id="s-f">—</div></div>
     </div>
 
-    <!-- Accordéon unités + étudiants -->
-    <div class="card" style="margin-bottom:24px;">
+    <div class="card">
       <div class="card-header">
         <span class="card-title">Étudiants par unité</span>
         <button class="btn btn-primary btn-sm" onclick="openModalEtudiant()">+ Inscrire</button>
       </div>
-      <div class="card-body" id="dash-unites">
-        <div class="spinner"></div>
-      </div>
+      <div class="card-body" id="dash-unites"><div class="spinner"></div></div>
     </div>
   </section>
 
@@ -508,22 +730,22 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
         <div class="page-title">Étudiants</div>
         <div class="page-sub">Gérez les inscriptions</div>
       </div>
-      <button class="btn btn-primary" onclick="openModalEtudiant()">+ Nouvel étudiant</button>
+      <button class="btn btn-primary btn-sm" onclick="openModalEtudiant()">+ Nouvel étudiant</button>
     </div>
 
     <div class="card">
       <div class="card-header">
-        <div class="search-bar">
-          <span>🔍</span>
-          <input id="search-et" type="text" placeholder="Chercher par nom, unité…" oninput="filterEtudiants(this.value)" />
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="form-control" style="width:auto;padding:7px 12px;font-size:12px;" id="filter-genre" onchange="filterEtudiants(document.getElementById('search-et').value)">
+        <div class="filters-row">
+          <div class="search-bar">
+            <span>🔍</span>
+            <input id="search-et" type="text" placeholder="Matricule, nom, unité…" oninput="filterEtudiants(this.value)" />
+          </div>
+          <select class="filter-select" id="filter-genre" onchange="filterEtudiants(document.getElementById('search-et').value)">
             <option value="">Tous les genres</option>
             <option value="M">Garçons</option>
             <option value="F">Filles</option>
           </select>
-          <select class="form-control" style="width:auto;padding:7px 12px;font-size:12px;" id="filter-unite" onchange="filterEtudiants(document.getElementById('search-et').value)">
+          <select class="filter-select" id="filter-unite" onchange="filterEtudiants(document.getElementById('search-et').value)">
             <option value="">Toutes les unités</option>
           </select>
         </div>
@@ -532,14 +754,20 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
         <table>
           <thead>
             <tr>
-              <th></th><th>Nom complet</th><th>Âge</th><th>Genre</th><th>Ethnie</th><th>Unité</th><th>Inscrit le</th><th>Actions</th>
+              <th></th>
+              <th>Matricule</th>
+              <th>Nom complet</th>
+              <th>Âge</th>
+              <th>Genre</th>
+              <th>Unités</th>
+              <th>Inscrit le</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="tbody-etudiants"></tbody>
         </table>
         <div id="et-empty" class="empty" style="display:none">
-          <div class="empty-icon">🎓</div>
-          <p>Aucun étudiant trouvé</p>
+          <div class="empty-icon">🎓</div><p>Aucun étudiant trouvé</p>
         </div>
         <div id="et-loading" class="spinner"></div>
       </div>
@@ -553,10 +781,9 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
         <div class="page-title">Unités d'enseignement</div>
         <div class="page-sub">Gérez les cours et professeurs</div>
       </div>
-      <button class="btn btn-primary" onclick="openModalUnite()">+ Nouvelle unité</button>
+      <button class="btn btn-primary btn-sm" onclick="openModalUnite()">+ Nouvelle unité</button>
     </div>
-
-    <div id="unites-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+    <div class="unites-grid" id="unites-grid">
       <div class="spinner" style="grid-column:1/-1;"></div>
     </div>
   </section>
@@ -566,42 +793,40 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
     <div class="page-header">
       <div>
         <div class="page-title">Répartition par genre</div>
-        <div class="page-sub">Garçons et filles par unité d'enseignement</div>
+        <div class="page-sub">Garçons et filles par unité</div>
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start;" class="graph-layout">
+    <div class="graph-layout">
       <div class="card">
-        <div class="card-header"><span class="card-title">Graphique comparatif</span></div>
-        <div class="card-body">
-          <div style="display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap;">
-            <span style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)">
-              <span style="width:12px;height:12px;border-radius:3px;background:#3dba7a;display:inline-block;"></span>Garçons
+        <div class="card-header">
+          <span class="card-title">Graphique comparatif</span>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+              <span style="width:10px;height:10px;border-radius:3px;background:#3dba7a;display:inline-block;"></span>Garçons
             </span>
-            <span style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)">
-              <span style="width:12px;height:12px;border-radius:3px;background:#e08452;display:inline-block;"></span>Filles
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+              <span style="width:10px;height:10px;border-radius:3px;background:#e08452;display:inline-block;"></span>Filles
             </span>
           </div>
+        </div>
+        <div class="card-body">
           <div class="chart-container">
-            <canvas id="genreChart" role="img" aria-label="Nombre de garçons et filles par unité">Chargement…</canvas>
+            <canvas id="genreChart"></canvas>
           </div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-header"><span class="card-title">Détails par unité</span></div>
-        <div class="card-body" id="graph-details">
-          <div class="spinner"></div>
-        </div>
+        <div class="card-body" id="graph-details"><div class="spinner"></div></div>
       </div>
     </div>
   </section>
 
 </main>
 
-<!-- ═══════════════════════════════════════════════════
-     MODAL ÉTUDIANT
-════════════════════════════════════════════════════ -->
+<!-- ════════════════════ MODAL ÉTUDIANT ════════════════════ -->
 <div id="modal-etudiant" class="modal-bg" style="display:none">
   <div class="modal">
     <div class="modal-header">
@@ -610,6 +835,13 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
     </div>
     <div class="modal-body">
       <input type="hidden" id="et-id" />
+
+      <!-- Matricule -->
+      <div class="form-group">
+        <label class="form-label">Matricule *</label>
+        <input class="form-control" id="et-matricule" placeholder="Ex : 24INF001" style="font-family:monospace;letter-spacing:.5px;" />
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Nom *</label>
@@ -620,6 +852,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
           <input class="form-control" id="et-prenom" placeholder="Ex : Paul" />
         </div>
       </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Date de naissance *</label>
@@ -630,10 +863,12 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
           <input class="form-control" id="et-age" type="number" min="16" max="80" placeholder="20" />
         </div>
       </div>
+
       <div class="form-group">
         <label class="form-label">Lieu de naissance *</label>
         <input class="form-control" id="et-lieu" placeholder="Ex : Yaoundé" />
       </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Genre *</label>
@@ -647,11 +882,19 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
           <input class="form-control" id="et-ethnie" placeholder="Ex : Beti" />
         </div>
       </div>
+
+      <!-- Multi-select unités -->
       <div class="form-group">
-        <label class="form-label">Unité d'enseignement *</label>
-        <select class="form-control" id="et-unite"></select>
+        <label class="form-label">Unités d'enseignement</label>
+        <div id="et-unites-list" class="checkbox-list">
+          <div class="checkbox-empty">Chargement…</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;">
+          Cochez une ou plusieurs unités (optionnel)
+        </div>
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+
+      <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('modal-etudiant')">Annuler</button>
         <button class="btn btn-primary" id="btn-save-et" onclick="saveEtudiant()">Enregistrer</button>
       </div>
@@ -659,9 +902,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     MODAL UNITÉ
-════════════════════════════════════════════════════ -->
+<!-- ════════════════════ MODAL UNITÉ ════════════════════════ -->
 <div id="modal-unite" class="modal-bg" style="display:none">
   <div class="modal">
     <div class="modal-header">
@@ -682,7 +923,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
         <label class="form-label">Description</label>
         <textarea class="form-control" id="un-desc" rows="3" placeholder="Description du cours…"></textarea>
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('modal-unite')">Annuler</button>
         <button class="btn btn-primary" onclick="saveUnite()">Enregistrer</button>
       </div>
@@ -690,40 +931,44 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     MODAL DÉTAIL UNITÉ
-════════════════════════════════════════════════════ -->
+<!-- ════════════════════ MODAL DÉTAIL UNITÉ ════════════════ -->
 <div id="modal-unite-detail" class="modal-bg" style="display:none">
-  <div class="modal" style="max-width:620px;">
+  <div class="modal" style="max-width:600px;">
     <div class="modal-header">
       <div class="modal-title" id="ud-title">Étudiants</div>
       <button class="modal-close" onclick="closeModal('modal-unite-detail')">✕</button>
     </div>
-    <div class="modal-body" id="ud-body">
-      <div class="spinner"></div>
-    </div>
+    <div class="modal-body" id="ud-body"><div class="spinner"></div></div>
   </div>
 </div>
 
-<!-- ─── TOAST ──────────────────────────────────────── -->
+<!-- TOAST -->
 <div id="toast"></div>
 
-<!-- ═══════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════
      JAVASCRIPT
-════════════════════════════════════════════════════ -->
+════════════════════════════════════════════════ -->
 <script>
-/* ───────────────────────────────────────────────────
-   CONFIG — remplacez l'URL par celle de votre backend Render
-─────────────────────────────────────────────────── */
+/* ── CONFIG ────────────────────────────────────────────── */
 const API = 'https://gestion-etudiants-1r26.onrender.com/api';
 
-/* ───────────────── UTILS ────────────────────────── */
+/* ── SIDEBAR MOBILE ────────────────────────────────────── */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/* ── UTILS ─────────────────────────────────────────────── */
 function toast(msg, type='ok') {
   const t = document.createElement('div');
   t.className = `toast-item ${type}`;
   t.textContent = (type==='ok' ? '✓ ' : '✗ ') + msg;
   document.getElementById('toast').appendChild(t);
-  setTimeout(() => t.remove(), 3500);
+  setTimeout(() => t.remove(), 3800);
 }
 
 async function api(path, method='GET', body=null) {
@@ -738,9 +983,8 @@ async function api(path, method='GET', body=null) {
     if (res.status === 204) return null;
     return res.json();
   } catch(e) {
-    if (e.message === 'Failed to fetch') {
+    if (e.message === 'Failed to fetch')
       throw new Error('Impossible de joindre le serveur backend.');
-    }
     throw e;
   }
 }
@@ -749,32 +993,30 @@ function fmt(dateStr) {
   if (!dateStr) return '—';
   return new Date(dateStr).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
 }
-
 function initials(prenom, nom) {
   return ((prenom?.[0]||'') + (nom?.[0]||'')).toUpperCase();
 }
 
-/* ───────────────── STATUS CHECK ─────────────────── */
+/* ── STATUS CHECK ───────────────────────────────────────── */
 async function checkStatus() {
   try {
-    await fetch(API + '/etudiants/?page=1');
-    document.getElementById('status-dot').className  = 'dot ok';
+    await fetch(API + '/etudiants/?page_size=1');
+    document.getElementById('status-dot').className   = 'dot ok';
     document.getElementById('status-text').textContent = 'Connecté';
   } catch {
-    document.getElementById('status-dot').className  = 'dot err';
+    document.getElementById('status-dot').className   = 'dot err';
     document.getElementById('status-text').textContent = 'Hors ligne';
   }
 }
 
-/* ───────────────── NAVIGATION ───────────────────── */
+/* ── NAVIGATION ─────────────────────────────────────────── */
 const pages = ['dashboard','etudiants','unites','graphique'];
-
-function showPage(id) {
+function navTo(id) {
+  closeSidebar();
   pages.forEach(p => document.getElementById('page-'+p).style.display = 'none');
   document.getElementById('page-'+id).style.display = 'block';
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => {
-    if (el.getAttribute('onclick')?.includes("'"+id+"'")) el.classList.add('active');
+    el.classList.toggle('active', el.getAttribute('onclick')?.includes("'"+id+"'"));
   });
   if (id==='dashboard') loadDashboard();
   if (id==='etudiants') loadEtudiants();
@@ -782,57 +1024,93 @@ function showPage(id) {
   if (id==='graphique') loadGraphique();
 }
 
-/* ───────────────── MODAL HELPERS ────────────────── */
+/* ── MODAL HELPERS ──────────────────────────────────────── */
 function closeModal(id) { document.getElementById(id).style.display='none'; }
-
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if (e.target === bg) bg.style.display='none'; });
 });
 
-/* ═══════════════════════════════════════════════════
-   DASHBOARD
-═══════════════════════════════════════════════════ */
-let allUnites = [], allEtudiants = [];
+/* ── MULTI-SELECT UNITÉS: render checkboxes ─────────────── */
+let allUnites = [];
 
+function renderUniteCheckboxes(containerId, selectedIds=[]) {
+  const container = document.getElementById(containerId);
+  if (!allUnites.length) {
+    container.innerHTML = '<div class="checkbox-empty">Aucune unité disponible</div>';
+    return;
+  }
+  container.innerHTML = allUnites.map(u => `
+    <label class="checkbox-item">
+      <input type="checkbox" value="${u.id}" ${selectedIds.includes(u.id) ? 'checked' : ''} />
+      <div class="checkbox-label">
+        <div class="cl-name">${u.nom_unite}</div>
+        <div class="cl-prof">Prof. ${u.nom_prof}</div>
+      </div>
+    </label>`).join('');
+}
+
+function getSelectedUnites(containerId) {
+  return Array.from(
+    document.querySelectorAll(`#${containerId} input[type=checkbox]:checked`)
+  ).map(cb => parseInt(cb.value));
+}
+
+async function loadAllUnites() {
+  try {
+    const data = await api('/unites/?page_size=500');
+    allUnites = data.results || data;
+    // Populate filter select in etudiants page
+    const sel = document.getElementById('filter-unite');
+    sel.innerHTML = '<option value="">Toutes les unités</option>'
+      + allUnites.map(u=>`<option value="${u.id}">${u.nom_unite}</option>`).join('');
+  } catch {}
+}
+
+/* ══════════════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════════════ */
 async function loadDashboard() {
   document.getElementById('dash-unites').innerHTML = '<div class="spinner"></div>';
   try {
-    const [unites, stats] = await Promise.all([
-      api('/unites/'),
+    const [unitesData, stats] = await Promise.all([
+      api('/unites/?page_size=500'),
       api('/unites/statistiques-genre/')
     ]);
-    allUnites = unites.results || unites;
+    allUnites = unitesData.results || unitesData;
+
     const totalM = stats.reduce((s,u)=>s+u.masculins,0);
     const totalF = stats.reduce((s,u)=>s+u.feminins,0);
-    const total  = totalM+totalF;
     document.getElementById('s-unites').textContent = allUnites.length;
-    document.getElementById('s-total').textContent  = total;
+    document.getElementById('s-total').textContent  = totalM + totalF;
     document.getElementById('s-m').textContent      = totalM;
     document.getElementById('s-f').textContent      = totalF;
     renderDashUnites(stats);
   } catch(e) {
-    document.getElementById('dash-unites').innerHTML = '<p style="color:var(--danger);padding:20px">Erreur de chargement. Vérifiez la connexion API.</p>';
+    document.getElementById('dash-unites').innerHTML =
+      '<p style="color:var(--danger);padding:20px">Erreur de chargement. Vérifiez la connexion API.</p>';
   }
 }
 
 function renderDashUnites(stats) {
   const el = document.getElementById('dash-unites');
-  if (!stats.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📚</div><p>Aucune unité créée</p></div>'; return; }
+  if (!stats.length) {
+    el.innerHTML='<div class="empty"><div class="empty-icon">📚</div><p>Aucune unité créée</p></div>';
+    return;
+  }
   el.innerHTML = stats.map(u => {
     const pctM = u.total ? Math.round(u.masculins/u.total*100) : 0;
-    const pctF = 100 - pctM;
     return `
     <div class="accordion-item">
-      <div class="accordion-header" onclick="toggleAccordion(this, ${u.id})">
-        <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="accordion-header" onclick="toggleAccordion(this,${u.id})">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span style="font-weight:600;font-size:14px;">${u.nom_unite}</span>
             <span class="badge badge-unit">${u.total} étudiant${u.total>1?'s':''}</span>
-            <span class="badge badge-m">${u.masculins} G</span>
-            <span class="badge badge-f">${u.feminins} F</span>
+            <span class="badge badge-m">${u.masculins}♂</span>
+            <span class="badge badge-f">${u.feminins}♀</span>
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px;">Prof. ${u.nom_prof}</div>
-          <div class="gender-bar-wrap" style="max-width:260px">
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">Prof. ${u.nom_prof}</div>
+          <div class="gender-bar-wrap" style="max-width:220px">
             <div class="gender-bar-m" style="width:${pctM}%"></div>
             <div class="gender-bar-f"></div>
           </div>
@@ -853,29 +1131,30 @@ async function toggleAccordion(header, id) {
   arrow.classList.add('open');
   if (body.dataset.loaded) return;
   body.dataset.loaded = '1';
-  body.innerHTML = '<div class="spinner" style="margin:20px auto;"></div>';
+  body.innerHTML = '<div class="spinner" style="margin:16px auto;"></div>';
   try {
     const data = await api(`/unites/${id}/etudiants/`);
     if (!data.etudiants.length) {
-      body.innerHTML='<div class="empty" style="padding:20px"><p>Aucun étudiant dans cette unité</p></div>';
+      body.innerHTML='<div class="empty" style="padding:16px"><p>Aucun étudiant dans cette unité</p></div>';
       return;
     }
     const rows = data.etudiants.map(e=>`
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.04);">
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid rgba(255,255,255,.04);">
         <div class="avatar ${e.genre==='M'?'av-m':'av-f'}">${initials(e.prenom,e.nom)}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:500;">${e.prenom} ${e.nom}</div>
-          <div style="font-size:11px;color:var(--muted);">${e.age} ans · ${e.ethnie||'—'}</div>
+          <div style="font-size:11px;color:var(--muted);">${e.age} ans · <span class="chip-mat">${e.matricule}</span></div>
         </div>
-        <span class="badge ${e.genre==='M'?'badge-m':'badge-f'}">${e.genre==='M'?'Garçon':'Fille'}</span>
+        <span class="badge ${e.genre==='M'?'badge-m':'badge-f'}">${e.genre==='M'?'G':'F'}</span>
       </div>`).join('');
-    body.innerHTML = rows + `<div style="padding:12px 20px;font-size:12px;color:var(--muted);">${data.total} étudiant(s) · ${data.masculins} garçons · ${data.feminins} filles</div>`;
-  } catch { body.innerHTML='<p style="padding:20px;color:var(--danger);">Erreur</p>'; }
+    body.innerHTML = rows
+      + `<div style="padding:10px 18px;font-size:11px;color:var(--muted);">${data.total} étudiant(s) · ${data.masculins} garçons · ${data.feminins} filles</div>`;
+  } catch { body.innerHTML='<p style="padding:16px;color:var(--danger);">Erreur</p>'; }
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════
    ÉTUDIANTS
-═══════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════ */
 let etudiantsList = [];
 
 async function loadEtudiants() {
@@ -883,107 +1162,136 @@ async function loadEtudiants() {
   document.getElementById('et-empty').style.display='none';
   document.getElementById('tbody-etudiants').innerHTML='';
   try {
-    const data = await api('/etudiants/?ordering=nom&page_size=200');
+    await loadAllUnites();
+    const data = await api('/etudiants/?ordering=nom&page_size=500');
     etudiantsList = data.results || data;
-    await loadUnitesForFilter();
     renderEtudiants(etudiantsList);
   } catch { toast('Erreur de chargement des étudiants','err'); }
   finally { document.getElementById('et-loading').style.display='none'; }
 }
 
-async function loadUnitesForFilter() {
-  try {
-    const data = await api('/unites/');
-    allUnites = data.results || data;
-    const sel1 = document.getElementById('filter-unite');
-    const sel2 = document.getElementById('et-unite');
-    const opts = allUnites.map(u=>`<option value="${u.id}">${u.nom_unite}</option>`).join('');
-    sel1.innerHTML='<option value="">Toutes les unités</option>'+opts;
-    sel2.innerHTML='<option value="">— Choisir une unité —</option>'+opts;
-  } catch {}
-}
-
 function renderEtudiants(list) {
   const tbody = document.getElementById('tbody-etudiants');
   document.getElementById('et-empty').style.display = list.length ? 'none':'block';
-  tbody.innerHTML = list.map(e=>`
+  tbody.innerHTML = list.map(e => {
+    const unitesBadges = buildUnitesBadges(e.unites_detail || []);
+    return `
     <tr>
       <td><div class="avatar ${e.genre==='M'?'av-m':'av-f'}">${initials(e.prenom,e.nom)}</div></td>
+      <td><span class="chip-mat">${e.matricule||'—'}</span></td>
       <td><strong>${e.nom} ${e.prenom}</strong></td>
       <td>${e.age} ans</td>
       <td><span class="badge ${e.genre==='M'?'badge-m':'badge-f'}">${e.genre==='M'?'Garçon':'Fille'}</span></td>
-      <td>${e.ethnie||'—'}</td>
-      <td><span class="badge badge-unit" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.unite_detail?.nom_unite||'—'}</span></td>
-      <td style="color:var(--muted);font-size:12px;">${fmt(e.date_inscription)}</td>
+      <td>${unitesBadges}</td>
+      <td style="color:var(--muted);font-size:11px;">${fmt(e.date_inscription)}</td>
       <td>
-        <div style="display:flex;gap:6px;">
+        <div style="display:flex;gap:5px;">
           <button class="btn btn-ghost btn-sm" onclick="editEtudiant(${e.id})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteEtudiant(${e.id},'${e.nom} ${e.prenom}')">🗑</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEtudiant(${e.id},'${escHtml(e.nom+' '+e.prenom)}')">🗑</button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
+}
+
+function buildUnitesBadges(unites) {
+  if (!unites || !unites.length) return '<span style="color:var(--muted);font-size:12px;">—</span>';
+  const MAX = 2;
+  const visible = unites.slice(0, MAX);
+  const rest    = unites.length - MAX;
+  let html = '<div class="unites-badges">'
+    + visible.map(u=>`<span class="badge badge-unit" title="${escHtml(u.nom_prof)}">${escHtml(u.nom_unite)}</span>`).join('')
+    + (rest > 0 ? `<span class="badge-more">+${rest}</span>` : '')
+    + '</div>';
+  return html;
+}
+
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function filterEtudiants(q) {
   const g = document.getElementById('filter-genre').value;
   const u = document.getElementById('filter-unite').value;
   let list = etudiantsList;
-  if (q) list = list.filter(e=>`${e.nom} ${e.prenom} ${e.ethnie} ${e.unite_detail?.nom_unite||''}`.toLowerCase().includes(q.toLowerCase()));
-  if (g) list = list.filter(e=>e.genre===g);
-  if (u) list = list.filter(e=>String(e.unite)===u);
+  if (q) {
+    const ql = q.toLowerCase();
+    list = list.filter(e =>
+      `${e.matricule} ${e.nom} ${e.prenom} ${e.ethnie} ${(e.unites_detail||[]).map(u=>u.nom_unite).join(' ')}`
+        .toLowerCase().includes(ql)
+    );
+  }
+  if (g) list = list.filter(e => e.genre === g);
+  if (u) list = list.filter(e => (e.unites||[]).map(String).includes(u));
   renderEtudiants(list);
 }
 
-function openModalEtudiant(data=null) {
-  document.getElementById('modal-et-title').textContent = data ? 'Modifier l\'étudiant' : 'Nouvel étudiant';
-  document.getElementById('et-id').value       = data?.id||'';
-  document.getElementById('et-nom').value      = data?.nom||'';
-  document.getElementById('et-prenom').value   = data?.prenom||'';
-  document.getElementById('et-dob').value      = data?.date_naissance||'';
-  document.getElementById('et-age').value      = data?.age||'';
-  document.getElementById('et-lieu').value     = data?.lieu_naissance||'';
-  document.getElementById('et-genre').value    = data?.genre||'M';
-  document.getElementById('et-ethnie').value   = data?.ethnie||'';
-  document.getElementById('et-unite').value    = data?.unite||'';
-  loadUnitesForFilter();
+async function openModalEtudiant(data=null) {
+  document.getElementById('modal-et-title').textContent = data ? "Modifier l'étudiant" : "Nouvel étudiant";
+  document.getElementById('et-id').value        = data?.id||'';
+  document.getElementById('et-matricule').value = data?.matricule||'';
+  document.getElementById('et-nom').value       = data?.nom||'';
+  document.getElementById('et-prenom').value    = data?.prenom||'';
+  document.getElementById('et-dob').value       = data?.date_naissance||'';
+  document.getElementById('et-age').value       = data?.age||'';
+  document.getElementById('et-lieu').value      = data?.lieu_naissance||'';
+  document.getElementById('et-genre').value     = data?.genre||'M';
+  document.getElementById('et-ethnie').value    = data?.ethnie||'';
+
+  // Charger les unités et pré-cocher
+  if (!allUnites.length) await loadAllUnites();
+  const selectedIds = (data?.unites||[]).map(Number);
+  renderUniteCheckboxes('et-unites-list', selectedIds);
+
   document.getElementById('modal-etudiant').style.display='flex';
 }
 
 async function editEtudiant(id) {
   try {
     const e = await api('/etudiants/'+id+'/');
-    openModalEtudiant(e);
+    await openModalEtudiant(e);
   } catch { toast('Erreur de chargement','err'); }
 }
 
 async function saveEtudiant() {
-  const id     = document.getElementById('et-id').value;
-  const body   = {
+  const id       = document.getElementById('et-id').value;
+  const matricule = document.getElementById('et-matricule').value.trim();
+  const body = {
+    matricule,
     nom            : document.getElementById('et-nom').value.trim(),
     prenom         : document.getElementById('et-prenom').value.trim(),
     date_naissance : document.getElementById('et-dob').value,
-    age            : parseInt(document.getElementById('et-age').value),
+    age            : parseInt(document.getElementById('et-age').value)||0,
     lieu_naissance : document.getElementById('et-lieu').value.trim(),
     genre          : document.getElementById('et-genre').value,
     ethnie         : document.getElementById('et-ethnie').value.trim(),
-    unite          : document.getElementById('et-unite').value||null,
+    unites         : getSelectedUnites('et-unites-list'),
   };
-  if (!body.nom||!body.prenom||!body.date_naissance||!body.lieu_naissance||!body.age) {
-    toast('Veuillez remplir tous les champs obligatoires (*)','err'); return;
+
+  if (!body.matricule||!body.nom||!body.prenom||!body.date_naissance||!body.lieu_naissance||!body.age) {
+    toast('Veuillez remplir tous les champs obligatoires (*)','err');
+    return;
   }
+
   const btn = document.getElementById('btn-save-et');
   btn.disabled=true; btn.textContent='Enregistrement…';
   try {
     if (id) await api('/etudiants/'+id+'/', 'PUT', body);
-    else     await api('/etudiants/',      'POST', body);
-    toast(id ? 'Étudiant mis à jour' : 'Étudiant enregistré avec succès');
+    else    await api('/etudiants/',        'POST', body);
+    toast(id ? 'Étudiant mis à jour ✓' : 'Étudiant enregistré avec succès ✓');
     closeModal('modal-etudiant');
     loadEtudiants();
-    // Rafraîchir le dashboard si ouvert
-    if (document.getElementById('page-dashboard').style.display!=='none') loadDashboard();
+    if (document.getElementById('page-dashboard').style.display !== 'none') {
+      // reset accordion cache
+      document.querySelectorAll('.accordion-body').forEach(b => { b.dataset.loaded=''; b.classList.remove('open'); });
+      document.querySelectorAll('.accordion-arrow').forEach(a => a.classList.remove('open'));
+      loadDashboard();
+    }
   } catch(e) {
-    toast('Erreur : '+e.message,'err');
-  } finally { btn.disabled=false; btn.textContent='Enregistrer'; }
+    toast('Erreur : ' + e.message, 'err');
+  } finally {
+    btn.disabled=false; btn.textContent='Enregistrer';
+  }
 }
 
 async function deleteEtudiant(id, nom) {
@@ -992,40 +1300,41 @@ async function deleteEtudiant(id, nom) {
     await api('/etudiants/'+id+'/', 'DELETE');
     toast(`${nom} supprimé`);
     loadEtudiants();
-    if (document.getElementById('page-dashboard').style.display!=='none') loadDashboard();
+    if (document.getElementById('page-dashboard').style.display !== 'none') loadDashboard();
   } catch { toast('Erreur lors de la suppression','err'); }
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════
    UNITÉS
-═══════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════ */
 async function loadUnites() {
   const grid = document.getElementById('unites-grid');
   grid.innerHTML='<div class="spinner" style="grid-column:1/-1;"></div>';
   try {
-    const data = await api('/unites/');
-    allUnites = data.results||data;
+    const data = await api('/unites/?page_size=500');
+    allUnites = data.results || data;
     if (!allUnites.length) {
-      grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div><p>Aucune unité créée</p></div>'; return;
+      grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📚</div><p>Aucune unité créée</p></div>';
+      return;
     }
-    grid.innerHTML = allUnites.map(u=>{
+    grid.innerHTML = allUnites.map(u => {
       const pctM = u.nb_etudiants ? Math.round(u.nb_masculins/u.nb_etudiants*100) : 0;
       return `
       <div class="card">
         <div class="card-header">
-          <div>
-            <div class="card-title">${u.nom_unite}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Prof. ${u.nom_prof}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="card-title">${escHtml(u.nom_unite)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Prof. ${escHtml(u.nom_prof)}</div>
           </div>
-          <div style="display:flex;gap:6px;">
+          <div style="display:flex;gap:5px;flex-shrink:0;">
             <button class="btn btn-ghost btn-sm" onclick="editUnite(${u.id})">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteUnite(${u.id},'${u.nom_unite}')">🗑</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteUnite(${u.id},'${escHtml(u.nom_unite)}')">🗑</button>
           </div>
         </div>
         <div class="card-body">
-          ${u.description?`<p style="font-size:13px;color:var(--muted);margin-bottom:14px;">${u.description}</p>`:''}
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
-            <span class="badge badge-unit">${u.nb_etudiants} étudiant${u.nb_etudiants!==1?'s':''}</span>
+          ${u.description ? `<p style="font-size:13px;color:var(--muted);margin-bottom:14px;">${escHtml(u.description)}</p>` : ''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <span class="badge badge-unit">${u.nb_etudiants} inscrit${u.nb_etudiants!==1?'s':''}</span>
             <span class="badge badge-m">${u.nb_masculins} garçons</span>
             <span class="badge badge-f">${u.nb_feminins} filles</span>
           </div>
@@ -1033,19 +1342,17 @@ async function loadUnites() {
             <div class="gender-bar-m" style="width:${pctM}%"></div>
             <div class="gender-bar-f"></div>
           </div>
-          <div style="margin-top:12px;">
-            <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="showUniteDetail(${u.id},'${u.nom_unite}')">
-              Voir les étudiants →
-            </button>
-          </div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:12px;" onclick="showUniteDetail(${u.id},'${escHtml(u.nom_unite)}')">
+            Voir les étudiants →
+          </button>
         </div>
       </div>`;
     }).join('');
-  } catch { grid.innerHTML='<p style="color:var(--danger);">Erreur de chargement</p>'; }
+  } catch { grid.innerHTML='<p style="color:var(--danger);padding:20px;">Erreur de chargement</p>'; }
 }
 
 function openModalUnite(data=null) {
-  document.getElementById('modal-un-title').textContent = data ? 'Modifier l\'unité':'Nouvelle unité';
+  document.getElementById('modal-un-title').textContent = data ? "Modifier l'unité" : "Nouvelle unité";
   document.getElementById('un-id').value   = data?.id||'';
   document.getElementById('un-nom').value  = data?.nom_unite||'';
   document.getElementById('un-prof').value = data?.nom_prof||'';
@@ -1054,33 +1361,35 @@ function openModalUnite(data=null) {
 }
 
 async function editUnite(id) {
-  try { const u=await api('/unites/'+id+'/'); openModalUnite(u); }
+  try { const u = await api('/unites/'+id+'/'); openModalUnite(u); }
   catch { toast('Erreur','err'); }
 }
 
 async function saveUnite() {
-  const id   = document.getElementById('un-id').value;
+  const id = document.getElementById('un-id').value;
   const body = {
-    nom_unite  : document.getElementById('un-nom').value.trim(),
-    nom_prof   : document.getElementById('un-prof').value.trim(),
-    description: document.getElementById('un-desc').value.trim(),
+    nom_unite   : document.getElementById('un-nom').value.trim(),
+    nom_prof    : document.getElementById('un-prof').value.trim(),
+    description : document.getElementById('un-desc').value.trim(),
   };
   if (!body.nom_unite||!body.nom_prof) { toast('Nom et professeur obligatoires','err'); return; }
   try {
     if (id) await api('/unites/'+id+'/', 'PUT', body);
-    else     await api('/unites/',       'POST', body);
+    else    await api('/unites/',        'POST', body);
     toast(id ? 'Unité mise à jour' : 'Unité créée');
     closeModal('modal-unite');
     loadUnites();
+    allUnites = [];  // reset cache
   } catch(e) { toast('Erreur : '+e.message,'err'); }
 }
 
 async function deleteUnite(id, nom) {
-  if (!confirm(`Supprimer l'unité "${nom}" ?\nLes étudiants rattachés seront détachés.`)) return;
+  if (!confirm(`Supprimer l'unité "${nom}" ?\nLes étudiants inscrits seront détachés.`)) return;
   try {
     await api('/unites/'+id+'/', 'DELETE');
     toast(`Unité "${nom}" supprimée`);
     loadUnites();
+    allUnites = [];
   } catch { toast('Erreur lors de la suppression','err'); }
 }
 
@@ -1091,34 +1400,36 @@ async function showUniteDetail(id, nom) {
   try {
     const data = await api(`/unites/${id}/etudiants/`);
     if (!data.etudiants.length) {
-      document.getElementById('ud-body').innerHTML='<div class="empty"><div class="empty-icon">🎓</div><p>Aucun étudiant inscrit</p></div>'; return;
+      document.getElementById('ud-body').innerHTML=
+        '<div class="empty"><div class="empty-icon">🎓</div><p>Aucun étudiant inscrit</p></div>';
+      return;
     }
     const byGenre = { M: data.etudiants.filter(e=>e.genre==='M'), F: data.etudiants.filter(e=>e.genre==='F') };
-    let html=`<div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+    let html = `<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
       <span class="badge badge-unit">${data.total} total</span>
       <span class="badge badge-m">${data.masculins} garçons</span>
       <span class="badge badge-f">${data.feminins} filles</span>
     </div>`;
-    ['M','F'].forEach(g=>{
+    ['M','F'].forEach(g => {
       if (!byGenre[g].length) return;
-      html+=`<p style="font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px;">${g==='M'?'Garçons':'Filles'}</p>`;
-      html+=byGenre[g].map(e=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+      html += `<p style="font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px;">${g==='M'?'Garçons':'Filles'}</p>`;
+      html += byGenre[g].map(e => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
           <div class="avatar ${g==='M'?'av-m':'av-f'}">${initials(e.prenom,e.nom)}</div>
-          <div style="flex:1">
+          <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:500;">${e.prenom} ${e.nom}</div>
-            <div style="font-size:11px;color:var(--muted)">${e.age} ans · ${e.lieu_naissance} · ${e.ethnie||'—'}</div>
+            <div style="font-size:11px;color:var(--muted)"><span class="chip-mat">${e.matricule}</span> · ${e.age} ans · ${escHtml(e.lieu_naissance)}</div>
           </div>
         </div>`).join('');
-      html+='<div style="margin-bottom:14px;"></div>';
+      html += '<div style="margin-bottom:12px;"></div>';
     });
-    document.getElementById('ud-body').innerHTML=html;
+    document.getElementById('ud-body').innerHTML = html;
   } catch { document.getElementById('ud-body').innerHTML='<p style="color:var(--danger);">Erreur</p>'; }
 }
 
-/* ═══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════
    GRAPHIQUE
-═══════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════ */
 let chartInstance = null;
 
 async function loadGraphique() {
@@ -1136,20 +1447,20 @@ function renderChart(stats) {
   chartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: stats.map(u=>u.nom_unite.length>14?u.nom_unite.substring(0,14)+'…':u.nom_unite),
+      labels: stats.map(u => u.nom_unite.length>14 ? u.nom_unite.substring(0,14)+'…' : u.nom_unite),
       datasets: [
         {
           label: 'Garçons',
           data: stats.map(u=>u.masculins),
           backgroundColor: 'rgba(61,186,122,.75)',
-          borderRadius: 6,
+          borderRadius: 5,
           borderSkipped: false,
         },
         {
           label: 'Filles',
           data: stats.map(u=>u.feminins),
           backgroundColor: 'rgba(224,132,82,.75)',
-          borderRadius: 6,
+          borderRadius: 5,
           borderSkipped: false,
         }
       ]
@@ -1176,12 +1487,12 @@ function renderChart(stats) {
 function renderGraphDetails(stats) {
   const el = document.getElementById('graph-details');
   if (!stats.length) { el.innerHTML='<div class="empty"><p>Aucune donnée</p></div>'; return; }
-  el.innerHTML = stats.map(u=>{
-    const pctM = u.total ? Math.round(u.masculins/u.total*100):0;
+  el.innerHTML = stats.map(u => {
+    const pctM = u.total ? Math.round(u.masculins/u.total*100) : 0;
     return `
     <div style="margin-bottom:18px;">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-        <span style="font-size:13px;font-weight:500;">${u.nom_unite}</span>
+        <span style="font-size:13px;font-weight:500;">${escHtml(u.nom_unite)}</span>
         <span style="font-size:11px;color:var(--muted);">${u.total} étudiant${u.total>1?'s':''}</span>
       </div>
       <div class="gender-bar-wrap">
@@ -1196,9 +1507,7 @@ function renderGraphDetails(stats) {
   }).join('');
 }
 
-/* ═══════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════ */
+/* ── INIT ───────────────────────────────────────────────── */
 checkStatus();
 loadDashboard();
 </script>
