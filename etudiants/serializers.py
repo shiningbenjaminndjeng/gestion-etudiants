@@ -26,16 +26,33 @@ class UniteEnseignementSerializer(serializers.ModelSerializer):
 
 
 class EtudiantSerializer(serializers.ModelSerializer):
-    unite_detail  = UniteEnseignementSerializer(source='unite', read_only=True)
+    unites_detail = UniteEnseignementSerializer(source='unites', many=True, read_only=True)
     genre_display = serializers.CharField(source='get_genre_display', read_only=True)
 
     class Meta:
         model  = Etudiant
         fields = [
-            'id', 'nom', 'prenom',
+            'id', 'matricule', 'nom', 'prenom',
             'date_naissance', 'lieu_naissance', 'age',
             'ethnie', 'genre', 'genre_display',
-            'unite', 'unite_detail',
+            'unites', 'unites_detail',
             'date_inscription',
         ]
-        read_only_fields = ['date_inscription', 'unite_detail', 'genre_display']
+        read_only_fields = ['date_inscription', 'unites_detail', 'genre_display']
+
+    def create(self, validated_data):
+        """Gestion explicite du M2M à la création."""
+        unites = validated_data.pop('unites', [])
+        etudiant = Etudiant.objects.create(**validated_data)
+        etudiant.unites.set(unites)
+        return etudiant
+
+    def update(self, instance, validated_data):
+        """Gestion explicite du M2M à la mise à jour."""
+        unites = validated_data.pop('unites', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if unites is not None:
+            instance.unites.set(unites)
+        return instance
