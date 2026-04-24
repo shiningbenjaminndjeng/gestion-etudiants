@@ -6,7 +6,15 @@
 <title>GestEtu — Gestion des Étudiants</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+
+menuBtn.onclick = () => {
+  sidebar.classList.toggle("active");
+};
+
+</script>
 
 <style>
 /* ─── RESET & VARS ───────────────────────────────────── */
@@ -32,7 +40,7 @@ body {
   color: var(--white);
   min-height: 100vh;
   display: flex;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* ─── SIDEBAR ────────────────────────────────────────── */
@@ -186,7 +194,7 @@ nav { padding: 16px 12px; flex: 1; }
   border-radius: var(--radius);
   padding: 20px;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 .stat-card::before {
   content: '';
@@ -207,7 +215,7 @@ nav { padding: 16px 12px; flex: 1; }
   background: var(--navy2);
   border: 1px solid rgba(201,168,76,.12);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow-x: hidden;
 }
 .card-header {
   padding: 18px 22px;
@@ -345,7 +353,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   border: 1px solid rgba(201,168,76,.12);
   border-radius: var(--radius);
   margin-bottom: 12px;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 .accordion-header {
   display: flex;
@@ -366,7 +374,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
 .accordion-body.open { display: block; }
 
 /* ─── GENDER BAR ─────────────────────────────────────── */
-.gender-bar-wrap { display: flex; gap: 3px; height: 6px; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.gender-bar-wrap { display: flex; gap: 3px; height: 6px; border-radius: 99px; overflow-x: hidden; margin-top: 6px; }
 .gender-bar-m { background: #3dba7a; border-radius: 99px 0 0 99px; transition: width .4s; }
 .gender-bar-f { background: #e08452; border-radius: 0 99px 99px 0; transition: width .4s; flex: 1; }
 
@@ -428,9 +436,66 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   #main    { margin-left: 200px; padding: 20px 16px; }
   .form-row { grid-template-columns: 1fr; }
 }
+
+/* ─── MENU BUTTON ───────────────── */
+#menuBtn {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 999;
+  background: var(--gold);
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ─── RESPONSIVE MOBILE ───────────────── */
+@media (max-width: 768px) {
+
+  #menuBtn {
+    display: block;
+  }
+
+  #sidebar {
+    position: fixed;
+    left: -240px;
+    top: 0;
+    height: 100%;
+    transition: 0.3s;
+  }
+
+  #sidebar.active {
+    left: 0;
+  }
+
+  #main {
+    margin-left: 0;
+    padding: 20px 15px;
+  }
+
+  .graph-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .card-body {
+    padding: 16px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+}
+
 </style>
 </head>
 <body>
+<button id="menuBtn">☰</button>
 
 <!-- ════════════════════════════════════════════════════
      SIDEBAR
@@ -1201,6 +1266,14 @@ function renderGraphDetails(stats) {
 ═══════════════════════════════════════════════════ */
 checkStatus();
 loadDashboard();
+
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+
+menuBtn.onclick = () => {
+  sidebar.classList.toggle("active");
+};
+
 </script>
 </body>
 </html>
