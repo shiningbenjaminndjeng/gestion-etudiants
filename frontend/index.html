@@ -14,6 +14,18 @@ menuBtn.onclick = () => {
   sidebar.classList.toggle("active");
 };
 
+
+const textHero = "Ce site vise à collecter les informations des étudiants et les trier par unité d'enseignement et par sexe. Ainsi, nous pourrons connaître les étudiants qui suivent une UE et les dénombrer... Lancez-vous !";
+let iHero = 0;
+function typeWriterHero() {
+  if (iHero < textHero.length) {
+    document.getElementById("hero-text").innerHTML += textHero.charAt(iHero);
+    iHero++;
+    setTimeout(typeWriterHero, 25);
+  }
+}
+window.addEventListener("load", typeWriterHero);
+
 </script>
 
 <style>
@@ -492,6 +504,38 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
   }
 }
 
+
+/* HERO INTRO */
+#hero {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  min-height:80vh;
+  animation:fadeHero 1s ease;
+}
+@keyframes fadeHero {
+  from {opacity:0;transform:translateY(20px);}
+  to {opacity:1;transform:translateY(0);}
+}
+.hero-title {
+  font-family:'DM Serif Display',serif;
+  font-size:42px;
+  color:var(--gold2);
+  margin-bottom:20px;
+}
+#hero-text {
+  font-size:15px;
+  color:var(--muted);
+  max-width:600px;
+  margin-bottom:25px;
+  min-height:60px;
+}
+@media (max-width:768px){
+  .hero-title {font-size:28px;}
+  #hero-text {font-size:14px;}
+}
+
 </style>
 </head>
 <body>
@@ -536,6 +580,16 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
      MAIN
 ═══════════════════════════════════════════════════════ -->
 <main id="main">
+<section id="hero">
+  <div class="hero-content">
+    <h1 class="hero-title">GestÉtu</h1>
+    <p id="hero-text"></p>
+    <button class="btn btn-primary" onclick="showPage('dashboard')">
+      🚀 Lancer l'application
+    </button>
+  </div>
+</section>
+
 
   <!-- ── DASHBOARD ── -->
   <section id="page-dashboard">
@@ -1273,6 +1327,18 @@ const sidebar = document.getElementById("sidebar");
 menuBtn.onclick = () => {
   sidebar.classList.toggle("active");
 };
+
+
+const textHero = "Ce site vise à collecter les informations des étudiants et les trier par unité d'enseignement et par sexe. Ainsi, nous pourrons connaître les étudiants qui suivent une UE et les dénombrer... Lancez-vous !";
+let iHero = 0;
+function typeWriterHero() {
+  if (iHero < textHero.length) {
+    document.getElementById("hero-text").innerHTML += textHero.charAt(iHero);
+    iHero++;
+    setTimeout(typeWriterHero, 25);
+  }
+}
+window.addEventListener("load", typeWriterHero);
 
 </script>
 </body>
