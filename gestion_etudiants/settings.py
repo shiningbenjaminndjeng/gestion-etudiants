@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-prod')
 DEBUG      = config('DEBUG', default=False, cast=bool)
 
+# ✅ Hardcodé — accepte TOUT
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -24,7 +25,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',   # ← AVANT CommonMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,10 +60,11 @@ DATABASES = {
     }
 }
 
+# ✅ CORS — autorise TOUT
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS     = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
-CORS_ALLOW_HEADERS     = [
+CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
+CORS_ALLOW_HEADERS = [
     'accept', 'accept-encoding', 'authorization',
     'content-type', 'dnt', 'origin',
     'user-agent', 'x-csrftoken', 'x-requested-with',
@@ -74,9 +76,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ✅ Classe de pagination correctement définie (page_size_query_param
-#    doit être sur la classe, pas en clé du dict REST_FRAMEWORK)
+# ✅ page_size_query_param activé — permet ?page_size=200 depuis le frontend
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'gestion_etudiants.pagination.StandardPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'page_size_query_param': 'page_size',
+    'max_page_size': 500,
 }
