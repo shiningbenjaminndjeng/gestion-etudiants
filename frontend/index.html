@@ -6,7 +6,8 @@
 <title>GestEtu — Gestion des Étudiants</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
 const menuBtn = document.getElementById("menuBtn");
 const sidebar = document.getElementById("sidebar");
 
@@ -552,7 +553,7 @@ tbody tr:hover td { background: rgba(255,255,255,.025); }
 
   <nav>
     <div class="nav-label">Navigation</div>
-    <button class="nav-item active" onclick="showPage('dashboard')">
+    <button class="nav-item active" onclick="startApp()">
       <span class="nav-icon">📊</span> Tableau de bord
     </button>
     <button class="nav-item" onclick="showPage('etudiants')">
@@ -1314,6 +1315,13 @@ function renderGraphDetails(stats) {
     </div>`;
   }).join('');
 }
+
+
+function startApp() {
+  showPage('dashboard');
+  openModalEtudiant();
+}
+
 
 /* ═══════════════════════════════════════════════════
    INIT
